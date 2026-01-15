@@ -1,0 +1,62 @@
+﻿@model MotorcyclePartShop.Models.User
+@{
+    ViewData["Title"] = "Add New User";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0 fw-bold"><i class=" me-2"></i> Add New User</h5>
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="CreateUser" method="post">
+                    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Full Name</label>
+                            <input asp-for="FullName" class="form-control" required />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Email</label>
+                            <input asp-for="Email" type="email" class="form-control" required />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Password</label>
+                            <input name="Password" type="password" class="form-control" required />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Phone Number</label>
+                            <input asp-for="Phone" class="form-control" required />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Address</label>
+                        <input asp-for="Address" class="form-control" />
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Role</label>
+                        <select name="RoleId" class="form-select">
+                            @foreach (var role in ViewBag.Roles as List<MotorcyclePartShop.Models.Role>)
+                            {
+                                <option value="@role.RoleId">@role.RoleName</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="/Admin/Users" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-4">Save User</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

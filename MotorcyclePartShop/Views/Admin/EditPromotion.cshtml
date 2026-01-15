@@ -1,0 +1,153 @@
+﻿@model MotorcyclePartShop.Models.Promotion
+@{
+    ViewData["Title"] = "Update Promotion";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0 fw-bold"><i class=" me-2"></i> Edit Promotion</h5>
+            </div>
+            <div class="card-body p-4">
+
+                <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                <form asp-action="EditPromotion" method="post">
+                    <input type="hidden" asp-for="PromotionId" />
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Promo Code</label>
+                            <input asp-for="PromoCode" class="form-control text-uppercase fw-bold" required />
+                            <span asp-validation-for="PromoCode" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Discount Percentage (%)</label>
+                            <input asp-for="DiscountPercent" type="number" min="1" max="100" class="form-control" required />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Start Date</label>
+                            <input asp-for="StartDate" type="date" class="form-control" required />
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">End Date</label>
+                            <input asp-for="EndDate" type="date" class="form-control" required />
+                        </div>
+                    </div>
+
+                    <div class="mb-4 p-3 border rounded bg-light">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" asp-for="IsActive" id="isActiveSwitch" style="cursor: pointer;">
+                            <label class="form-check-label fw-bold @(Model.IsActive ? "text-success" : "text-secondary")" for="isActiveSwitch" id="isActiveLabel">
+                                @(Model.IsActive ? "Active" : "Inactive")
+                            </label>
+                        </div>
+
+                        @if (Model.EndDate < DateTime.Now)
+                        {
+                            <div class="alert alert-warning mt-3 mb-0 d-flex align-items-center">
+                                <i class="fas fa-exclamation-triangle me-2 fs-4 text-danger"></i>
+                                <div>
+                                    <strong>Note:</strong> This promotion is currently
+                                    <span class="text-danger fw-bold">EXPIRED</span>
+                                    because the end date (@Model.EndDate.ToString("dd/MM/yyyy")) is before the current date.
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Usage Limit Per User</label>
+                        <input asp-for="UsageLimitPerUser" type="number" min="1" class="form-control" value="1" required />
+                        <span class="text-muted small">Example: Enter 1 if a customer can only use this code once.</span>
+                    </div>
+                    <div class="card mb-4 border-secondary">
+                        <div class="card-header bg-light fw-bold text-dark">
+                            <i class=" me-2"></i> Applicable Products
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted small mb-2">
+                                <i class="fas fa-info-circle"></i> If no products are selected, this code will apply to <strong>all products</strong> (Store-wide).
+                            </p>
+
+                            <div class="product-list-container border rounded p-2 bg-white" style="max-height: 250px; overflow-y: auto;">
+                                @{
+                                    var allProducts = ViewBag.AllProducts as dynamic;
+                                    var selectedIds = ViewBag.SelectedProductIds as List<int> ?? new List<int>();
+                                }
+
+                                @if (allProducts != null)
+                                {
+                                    foreach (var p in allProducts)
+                                    {
+                                        bool isChecked = selectedIds.Contains(p.ProductId);
+                                        <div class="form-check py-1 border-bottom">
+                                            <input class="form-check-input" type="checkbox" name="selectedProducts" value="@p.ProductId" id="prod_@p.ProductId" @(isChecked ? "checked" : "")>
+                                            <label class="form-check-label w-100" for="prod_@p.ProductId" style="cursor: pointer;">
+                                                @p.ProductName
+                                            </label>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                        <a href="/Admin/Promotions" class="btn btn-secondary px-4">Back</a>
+                        <button type="submit" class="btn btn-warning px-4 fw-bold">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+    <script>
+        // Cấu hình Toastr
+        toastr.options = {
+            "closeButton": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "timeOut": "3000"
+        };
+
+        document.addEventListener("DOMContentLoaded", function() {
+            // 1. Logic cho nút Switch Active
+            const toggle = document.getElementById('isActiveSwitch');
+            const label = document.getElementById('isActiveLabel');
+
+            toggle.addEventListener('change', function() {
+                if (this.checked) {
+                    label.textContent = "Active";
+                    label.classList.remove("text-secondary");
+                    label.classList.add("text-success");
+                } else {
+                    label.textContent = "Inactive";
+                    label.classList.remove("text-success");
+                    label.classList.add("text-secondary");
+                }
+            });
+
+            // 2. Hiển thị thông báo (Chủ yếu là thông báo Lỗi nếu Validate sai)
+            // Thông báo Success sẽ được hiển thị ở trang Promotions nhờ Redirect
+            var successMsg = '@TempData["Success"]';
+            var errorMsg = '@TempData["Error"]';
+
+            if (successMsg) toastr.success(successMsg, 'Success');
+            if (errorMsg) toastr.error(errorMsg, 'Error');
+        });
+    </script>
+}

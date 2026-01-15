@@ -1,0 +1,35 @@
+﻿@{
+    ViewData["Title"] = "Payment Result";
+    bool isSuccess = ViewBag.IsSuccess ?? false;
+}
+
+<div class="container py-5 text-center">
+    @if (isSuccess)
+    {
+        <div class="text-success mb-3">
+            <i class="fas fa-check-circle fa-5x"></i>
+        </div>
+        <h2 class="fw-bold text-success">Payment successful!</h2>
+        <p class="lead">The order has been moved to the pending status.</p>
+        <a href="/Order/History" class="btn btn-primary mt-3">View order</a>
+    }
+    else
+    {
+        <div class="text-warning mb-3">
+            <i class="fas fa-clock fa-5x"></i>
+        </div>
+        <h2 class="fw-bold text-warning">Payment not yet complete!</h2>
+        <p class="lead text-muted">@ViewBag.Message</p>
+
+        <div class="alert alert-info d-inline-block mt-3">
+            <i class="fas fa-info-circle me-2"></i>
+            The system will hold this order for a period of time.<strong>10 minutes</strong>.<br>
+            Please go to <strong>Order History</strong> to complete the payment before your order is automatically canceled.
+        </div>
+
+        <div class="mt-4">
+            <a href="/Order/History" class="btn btn-dark">Go to Order History</a>
+            <a href="/" class="btn btn-outline-secondary ms-2">Home page</a>
+        </div>
+    }
+</div>

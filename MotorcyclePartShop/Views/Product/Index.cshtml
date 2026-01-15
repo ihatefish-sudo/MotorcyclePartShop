@@ -1,0 +1,173 @@
+﻿@model IEnumerable<MotorcyclePartShop.Models.Product>
+@{
+    ViewData["Title"] = ViewBag.CurrentCategory ?? "Product List";
+    var categories = ViewBag.Categories as List<MotorcyclePartShop.Models.Category>;
+    var brands = ViewBag.Brands as List<MotorcyclePartShop.Models.Brand>;
+
+    // 1. Lấy các ID hiện tại từ URL
+    int.TryParse(Context.Request.Query["brandId"], out int currentBrandId);
+    int.TryParse(Context.Request.Query["categoryId"], out int currentCategoryId);
+}
+
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-dark">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Products</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-md-3 mb-4">
+
+            <div class="card shadow-sm border-0 mb-3">
+                <div class="card-header bg-danger text-white fw-bold">
+                    <i class="fas fa-list me-2"></i> CATEGORIES
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item @(currentCategoryId == 0 ? "bg-light" : "")">
+                        <a href="/Product@(currentBrandId > 0 ? "?brandId=" + currentBrandId : "")"
+                           class="text-decoration-none @(currentCategoryId == 0 ? "text-danger fw-bold" : "text-dark fw-bold")">
+                            All Products
+                        </a>
+                    </li>
+
+                    @if (categories != null)
+                    {
+                        foreach (var cat in categories)
+                        {
+                            bool isCatActive = cat.CategoryId == currentCategoryId;
+
+                            // LOGIC KẾT HỢP: Giữ lại BrandId khi chọn Category
+                            string catLink = $"/Product?categoryId={cat.CategoryId}";
+                            if (currentBrandId > 0)
+                            {
+                                catLink += $"&brandId={currentBrandId}";
+                            }
+
+                            <li class="list-group-item @(isCatActive ? "bg-light" : "")">
+                                <a href="@catLink"
+                                   class="text-decoration-none @(isCatActive ? "text-danger fw-bold" : "text-secondary hover-danger")">
+                                    <i class="fas fa-caret-right me-2"></i> @cat.CategoryName
+                                </a>
+                            </li>
+                        }
+                    }
+                </ul>
+            </div>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white fw-bold">
+                    <i class="fas fa-tag me-2"></i> BRANDS
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap gap-2">
+                        @if (brands != null)
+                        {
+                            foreach (var b in brands)
+                            {
+                                bool isBrandActive = b.BrandId == currentBrandId;
+
+                                // LOGIC KẾT HỢP: Giữ lại CategoryId khi chọn Brand
+                                string brandLink = $"/Product?brandId={b.BrandId}";
+                                if (currentCategoryId > 0)
+                                {
+                                    brandLink += $"&categoryId={currentCategoryId}";
+                                }
+
+                                <a href="@brandLink"
+                                   class="badge text-decoration-none p-2 @(isBrandActive ? "bg-danger text-white shadow-sm" : "bg-light text-dark border")">
+                                    @if (isBrandActive)
+                                    {
+                                        <i class="fas fa-check me-1"></i>
+                                    } @b.BrandName
+                                </a>
+                            }
+                        }
+                    </div>
+
+                    @if (currentBrandId > 0)
+                    {
+                        <div class="mt-3 pt-2 border-top text-center">
+                            <a href="/Product@(currentCategoryId > 0 ? "?categoryId=" + currentCategoryId : "")"
+                               class="small text-danger text-decoration-none">
+                                <i class="fas fa-times-circle me-1"></i> Clear Brand Filter
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <h4 class="mb-3 fw-bold border-bottom pb-2 border-danger">
+                @if (ViewBag.SearchKeyword != null)
+                {
+                    <span>Search results for: "@ViewBag.SearchKeyword"</span>
+                }
+                else
+                {
+                    // Hiển thị tiêu đề thông minh: "Category + Brand"
+                    var activeCat = categories?.FirstOrDefault(c => c.CategoryId == currentCategoryId);
+                    var activeBrand = brands?.FirstOrDefault(b => b.BrandId == currentBrandId);
+
+                    if (activeCat != null && activeBrand != null)
+                    {
+                        <span>@activeCat.CategoryName <span class="text-muted mx-2">/</span> <span class="text-danger">@activeBrand.BrandName</span></span>
+                    }
+                    else if (activeCat != null)
+                    {
+                        <span>@activeCat.CategoryName</span>
+                    }
+                    else if (activeBrand != null)
+                    {
+                        <span>Brand: <span class="text-danger">@activeBrand.BrandName</span></span>
+                    }
+                    else
+                    {
+                        <span>All Products</span>
+                    }
+                }
+            </h4>
+
+            @if (!Model.Any())
+            {
+                <div class="alert alert-warning text-center">
+                    No matching products found.
+                </div>
+            }
+            else
+            {
+                <div class="row row-cols-2 row-cols-md-3 g-3">
+                    @foreach (var item in Model)
+                    {
+                        <div class="col">
+                            <div class="card h-100 product-card shadow-sm border">
+                                <div class="position-relative" style="height: 200px; overflow: hidden; padding: 10px;">
+                                    <img src="@(item.MainImage.StartsWith("http") ? item.MainImage : "/images/products/" + item.MainImage)"
+                                         class="card-img-top w-100 h-100" style="object-fit: contain;" alt="@item.ProductName">
+                                </div>
+                                <div class="card-body text-center d-flex flex-column">
+                                    <h6 class="card-title text-truncate">
+                                        <a href="/Product/Details/@item.ProductId" class="text-decoration-none text-dark fw-bold" title="@item.ProductName">
+                                            @item.ProductName
+                                        </a>
+                                    </h6>
+                                    <p class="card-text text-danger fw-bold fs-5 mb-auto">@item.Price.ToString("#,##0")₫</p>
+                                    <a href="/Product/Details/@item.ProductId" class="btn btn-outline-danger btn-sm mt-2">View Details</a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-danger:hover {
+        color: #d70018 !important;
+        font-weight: 500;
+    }
+</style>

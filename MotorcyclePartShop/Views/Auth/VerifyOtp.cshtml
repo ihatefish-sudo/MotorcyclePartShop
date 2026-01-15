@@ -1,0 +1,110 @@
+﻿@{
+    ViewData["Title"] = "Xác thực OTP";
+    int countdown = ViewBag.Countdown != null ? (int)ViewBag.Countdown : 0;
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4 text-center">
+                    <h3 class="fw-bold text-danger mb-3">Xác thực OTP</h3>
+                    <p class="text-muted small">Mã đã gửi đến <strong>@ViewBag.Email</strong></p>
+                    <p class="text-danger small fst-italic">Mã hết hạn sau 1 phút.</p>
+
+                    @if (ViewBag.Error != null)
+                    {
+                        <div class="alert alert-danger">@ViewBag.Error</div>
+                    }
+
+                    <form asp-action="VerifyOtp" method="post">
+                        <input type="hidden" name="email" value="@ViewBag.Email" />
+                        <div class="mb-4">
+                            <input type="text" name="otp" class="form-control text-center fs-3 fw-bold letter-spacing-2"
+                                   maxlength="6" placeholder="------" required />
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 fw-bold mb-3">Xác Nhận</button>
+                    </form>
+
+                    <div class="d-grid">
+                        <button id="btnResend" class="btn btn-outline-secondary btn-sm" onclick="resendOtp()" disabled>
+                            Gửi lại mã (<span id="countdown">@countdown</span>s)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>.letter-spacing-2 { letter-spacing: 5px; }</style>
+
+@section Scripts {
+    <script>
+        let timeLeft = @countdown;
+        const btnResend = document.getElementById('btnResend');
+        const countdownSpan = document.getElementById('countdown');
+        // Lấy email từ ViewBag để gửi lại ajax
+        const email = '@ViewBag.Email';
+
+        function startCountdown() {
+            if (timeLeft <= 0) {
+                enableResend();
+                return;
+            }
+
+            btnResend.disabled = true;
+
+            const timer = setInterval(() => {
+                timeLeft--;
+                if(countdownSpan) countdownSpan.innerText = timeLeft;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    enableResend();
+                }
+            }, 1000);
+        }
+
+        function enableResend() {
+            if(btnResend) {
+                btnResend.disabled = false;
+                btnResend.innerHTML = '<i class="fas fa-redo me-1"></i> Gửi lại mã OTP';
+                btnResend.classList.remove('btn-outline-secondary');
+                btnResend.classList.add('btn-outline-danger');
+            }
+        }
+
+        function resendOtp() {
+            if(btnResend) {
+                btnResend.disabled = true;
+                btnResend.innerHTML = 'Đang gửi...';
+            }
+
+            $.post('/Auth/ResendOtp', { email: email }, function(res) {
+                if (res.success) {
+                    alert(res.message);
+                    timeLeft = 90; // Reset 1p30s
+
+                    if(btnResend) {
+                        btnResend.classList.remove('btn-outline-danger');
+                        btnResend.classList.add('btn-outline-secondary');
+                        btnResend.innerHTML = `Gửi lại mã (<span id="countdown">90</span>s)`;
+                    }
+                    // Cập nhật lại tham chiếu DOM mới vì innerHTML vừa render lại
+                    const newSpan = document.getElementById('countdown');
+                    if(newSpan) startCountdown();
+                } else {
+                    alert(res.message);
+                    enableResend();
+                }
+            }).fail(function() {
+                alert("Lỗi kết nối!");
+                enableResend();
+            });
+        }
+
+        // Bắt đầu đếm ngược khi load trang
+        startCountdown();
+    </script>
+}

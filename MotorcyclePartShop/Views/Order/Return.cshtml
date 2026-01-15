@@ -1,0 +1,191 @@
+﻿@model MotorcyclePartShop.Models.Order
+
+@{
+    ViewData["Title"] = "Request Return / Refund";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="d-flex align-items-center mb-4 border-bottom border-danger pb-3">
+                <a href="/Order/Details/@Model.OrderId" class="btn btn-outline-secondary btn-sm me-3 shadow-sm">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+                <h3 class="text-uppercase fw-bold m-0 text-danger">
+                    <i class="fas fa-undo-alt me-2"></i> Request Return / Refund
+                </h3>
+            </div>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+
+                    <div class="bg-light p-3 rounded border mb-4">
+                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">
+                            <i class="fas fa-info-circle text-primary me-1"></i> Order Information
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-4 mb-2">
+                                <small class="text-muted d-block">Order ID</small>
+                                <span class="fw-bold text-primary">#@Model.TrackingCode</span>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <small class="text-muted d-block">Order Date</small>
+                                <span class="fw-bold">@Model.OrderDate.ToString("dd/MM/yyyy")</span>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <small class="text-muted d-block">Total Amount</small>
+                                <span class="fw-bold text-danger">@Model.TotalAmount.ToString("#,##0")₫</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-2 pt-2 border-top">
+                            <small class="text-muted mb-2 d-block">Products in Order:</small>
+                            @foreach (var item in Model.Items)
+                            {
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-check text-success me-2 small"></i>
+                                    <span class="text-dark small fw-bold">@item.Product.ProductName</span>
+                                    <span class="text-muted small ms-2">x @item.Quantity</span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <form asp-action="SubmitReturn" method="post" enctype="multipart/form-data">
+                        <input type="hidden" name="OrderId" value="@Model.OrderId" />
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Reason for Return <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i class="fas fa-question-circle text-secondary"></i></span>
+                                <select name="Reason" class="form-select py-2" required>
+                                    <option value="" selected disabled>-- Select a Reason --</option>
+                                    <option value="Damaged">Product is damaged / Broken / Deformed</option>
+                                    <option value="WrongItem">Received wrong item</option>
+                                    <option value="Defective">Product is defective / Not working</option>
+                                    <option value="MissingParts">Missing parts / Accessories</option>
+                                    <option value="NotAsDescribed">Product not as described</option>
+                                    <option value="Other">Other reason</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Detailed Description <span class="text-danger">*</span></label>
+                            <textarea name="Note" class="form-control" rows="4"
+                                      placeholder="Please describe the issue in detail..." required></textarea>
+                            <div class="form-text">The more details you provide, the faster we can process your request.</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Evidence (Image) <span class="text-danger">*</span></label>
+
+                            <div class="upload-area p-4 border border-2 border-dashed rounded text-center position-relative bg-white" id="dropArea">
+                                <div id="uploadPlaceholder">
+                                    <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                                    <p class="fw-bold mb-1">Click to Upload Image</p>
+                                    <p class="small text-muted mb-0">Supported formats: JPG, PNG, JPEG (Max 5MB)</p>
+                                </div>
+
+                                <input type="file" name="EvidenceImage" id="fileInput"
+                                       class="position-absolute top-0 start-0 w-100 h-100 opacity-0"
+                                       accept="image/*" style="cursor: pointer;" required onchange="previewImage(event)">
+
+                                <div class="mt-3 position-relative d-none" id="previewContainer">
+                                    <img id="imgPreview" src="#" alt="Preview" class="img-fluid rounded shadow-sm border"
+                                         style="max-height: 250px; object-fit: contain;">
+
+                                    <button type="button" class="btn btn-sm btn-danger rounded-circle position-absolute top-0 end-50 translate-middle-x mt-2 shadow"
+                                            style="margin-left: 100px;" onclick="removeImage()">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                    <p class="small text-success mt-2 fw-bold mb-0" id="fileName"><i class="fas fa-check-circle me-1"></i> Image Selected</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning border-0 d-flex align-items-center" role="alert">
+                            <i class="fas fa-exclamation-triangle me-3 fa-2x"></i>
+                            <div>
+                                <small>By submitting this request, you confirm that the information and images provided are truthful. We will contact you within 24 hours.</small>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-danger btn-lg fw-bold py-3 shadow-sm hover-scale">
+                                <i class="fas fa-paper-plane me-2"></i> SUBMIT REQUEST
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Custom CSS for Upload Area */
+    .border-dashed {
+        border-style: dashed !important;
+        border-color: #dee2e6;
+        transition: all 0.3s ease;
+    }
+
+    .upload-area:hover {
+        background-color: #f8f9fa !important;
+        border-color: #d70018 !important; /* Brand red color on hover */
+    }
+
+    .hover-scale {
+        transition: transform 0.2s;
+    }
+
+        .hover-scale:hover {
+            transform: translateY(-2px);
+        }
+</style>
+
+@section Scripts {
+    <script>
+        // --- Preview Image Function ---
+        function previewImage(event) {
+            var input = event.target;
+            var previewContainer = document.getElementById('previewContainer');
+            var uploadPlaceholder = document.getElementById('uploadPlaceholder');
+            var imgPreview = document.getElementById('imgPreview');
+            var fileName = document.getElementById('fileName');
+
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+
+                reader.onload = function(e) {
+                    imgPreview.src = e.target.result;
+
+                    // Hide placeholder, show preview
+                    uploadPlaceholder.classList.add('d-none');
+                    previewContainer.classList.remove('d-none');
+
+                    fileName.innerHTML = '<i class="fas fa-check-circle me-1"></i> ' + input.files[0].name;
+                }
+
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // --- Remove Selected Image Function ---
+        function removeImage() {
+            var input = document.getElementById('fileInput');
+            var previewContainer = document.getElementById('previewContainer');
+            var uploadPlaceholder = document.getElementById('uploadPlaceholder');
+
+            input.value = ""; // Reset input file
+
+            // Hide preview, show placeholder again
+            previewContainer.classList.add('d-none');
+            uploadPlaceholder.classList.remove('d-none');
+        }
+    </script>
+}

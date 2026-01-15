@@ -1,0 +1,177 @@
+﻿@model MotorcyclePartShop.Models.Order
+
+@{
+    ViewData["Title"] = "Track Order";
+}
+
+<div class="container py-5">
+
+    <div class="row justify-content-center mb-5">
+        <div class="col-md-8 text-center">
+            <h3 class="fw-bold text-uppercase text-danger mb-3">
+                <i class="fas fa-search-location me-2"></i> Track Order
+            </h3>
+            <p class="text-muted mb-4">Enter your order code (e.g. ORD638...) to track status.</p>
+
+            <form action="/Order/TrackOrder" method="get" class="card p-4 shadow-sm border-0 bg-light">
+                <div class="input-group input-group-lg">
+                    <input type="text" name="code" class="form-control border-secondary"
+                           placeholder="Enter order code..."
+                           value="@ViewBag.SearchedCode" required>
+                    <button class="btn btn-danger px-4 fw-bold" type="submit">
+                        <i class="fas fa-search me-2"></i> TRACK
+                    </button>
+                </div>
+                @if (ViewBag.Error != null)
+                {
+                    <div class="text-danger mt-2 fw-bold"><i class="fas fa-exclamation-triangle me-1"></i> @ViewBag.Error</div>
+                }
+            </form>
+        </div>
+    </div>
+
+    @if (Model != null)
+    {
+        <div class="row animate__animated animate__fadeIn">
+            <div class="col-lg-8">
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-danger text-white fw-bold d-flex justify-content-between">
+                        <span>Order Information</span>
+                        <span>#@Model.TrackingCode</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <p class="mb-1 text-muted small">Order Date</p>
+                                <h6 class="fw-bold">@Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</h6>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-1 text-muted small">Current Status</p>
+                                @if (Model.DeliveryStatus == "Pending")
+                                {
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                }
+                                else if (Model.DeliveryStatus == "Shipping")
+                                {
+                                    <span class="badge bg-info">Shipping</span>
+                                }
+                                else if (Model.DeliveryStatus == "Completed")
+                                {
+                                    <span class="badge bg-success">Delivered</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">@Model.DeliveryStatus</span>
+                                }
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <p class="mb-1 text-muted small">Shipping Address</p>
+                                <p class="fw-bold mb-0"><i class="fas fa-map-marker-alt text-danger me-2"></i> @Model.ShippingAddress</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-light fw-bold">Product Details</div>
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Product</th>
+                                    <th class="text-center">Qty</th>
+                                    <th class="text-end">Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.Items)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img src="@(item.Product.MainImage.StartsWith("http") ? item.Product.MainImage : "/images/products/" + item.Product.MainImage)"
+                                                     width="40" height="40" class="rounded border me-2" style="object-fit:cover;">
+                                                <span class="fw-bold small">@item.Product.ProductName</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">@item.Quantity</td>
+                                        <td class="text-end fw-bold">@item.Price.ToString("#,##0")₫</td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot class="bg-light">
+                                <tr>
+                                    <td colspan="2" class="text-end fw-bold">Total Payment:</td>
+                                    <td class="text-end fw-bold text-danger fs-5">@Model.TotalAmount.ToString("#,##0")₫</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 mt-4 mt-lg-0">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-dark text-white fw-bold">
+                        <i class="fas fa-history me-2"></i> ORDER HISTORY
+                    </div>
+                    <div class="card-body">
+                        @if (Model.Tracking != null && Model.Tracking.Any())
+                        {
+                            <div class="tracking-timeline">
+                                @foreach (var track in Model.Tracking.OrderByDescending(t => t.UpdatedAt))
+                                {
+                                    <div class="timeline-item">
+                                        <div class="timeline-marker"></div>
+                                        <div class="timeline-content">
+                                            <h6 class="fw-bold mb-1 text-dark" style="font-size: 14px;">@track.Status</h6>
+                                            <small class="text-muted"><i class="far fa-clock me-1"></i> @track.UpdatedAt.ToString("dd/MM/yyyy HH:mm")</small>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted text-center py-3">Order is pending processing.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .tracking-timeline {
+        position: relative;
+        padding-left: 20px;
+        margin-top: 10px;
+        border-left: 2px solid #e9ecef;
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 25px;
+        padding-left: 20px;
+    }
+
+    .timeline-marker {
+        position: absolute;
+        left: -26px;
+        top: 0;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #d70018;
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 2px #d70018;
+    }
+
+    .timeline-item:first-child .timeline-marker {
+        background: #28a745;
+        box-shadow: 0 0 0 2px #28a745;
+    }
+</style>

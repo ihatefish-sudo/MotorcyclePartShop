@@ -1,0 +1,183 @@
+﻿@{
+    ViewData["Title"] = "Careers";
+}
+
+<div class="bg-light py-4 mb-5">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-dark">Home</a></li>
+                <li class="breadcrumb-item active text-danger fw-bold" aria-current="page">Careers</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <div class="row align-items-center bg-danger text-white rounded p-5 shadow-sm position-relative overflow-hidden">
+        <div class="col-md-7 position-relative" style="z-index: 2;">
+            <h1 class="fw-bold display-5 mb-3">JOIN THE MOTO SHOP TEAM</h1>
+            <p class="lead mb-4">
+                Build the leading motorcycle parts system in Vietnam with us.
+                A professional, passionate environment with ample opportunities for advancement.
+            </p>
+            <a href="#open-positions" class="btn btn-light text-danger fw-bold px-4 py-2 rounded-pill shadow-sm">
+                <i class="fas fa-briefcase me-2"></i> View Open Positions
+            </a>
+        </div>
+        <div class="col-md-5 d-none d-md-block text-end">
+            <i class="fas fa-users fa-10x opacity-25"></i>
+        </div>
+
+        <div class="position-absolute top-0 end-0 bg-white opacity-10 rounded-circle" style="width: 200px; height: 200px; margin-top: -100px; margin-right: -100px;"></div>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <div class="text-center mb-5">
+        <h3 class="fw-bold text-uppercase border-bottom border-danger d-inline-block pb-2">Why Choose Us?</h3>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm text-center p-4 hover-card">
+                <div class="mb-3 text-danger"><i class="fas fa-money-bill-wave fa-3x"></i></div>
+                <h5 class="fw-bold">Competitive Salary</h5>
+                <p class="text-muted small">Attractive base salary, monthly sales bonuses, and 13th-month salary.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm text-center p-4 hover-card">
+                <div class="mb-3 text-danger"><i class="fas fa-graduation-cap fa-3x"></i></div>
+                <h5 class="fw-bold">Professional Training</h5>
+                <p class="text-muted small">Receive training in technical motorcycle knowledge and professional sales skills.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm text-center p-4 hover-card">
+                <div class="mb-3 text-danger"><i class="fas fa-heart fa-3x"></i></div>
+                <h5 class="fw-bold">Dynamic Environment</h5>
+                <p class="text-muted small">Work with young, passionate individuals who respect and support each other.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="open-positions" class="text-center mb-4 pt-4">
+        <h3 class="fw-bold text-uppercase border-bottom border-danger d-inline-block pb-2">Open Positions</h3>
+    </div>
+
+    <div class="accordion shadow-sm" id="jobsAccordion">
+
+        <div class="accordion-item border-0 mb-3 rounded overflow-hidden">
+            <h2 class="accordion-header">
+                <button class="accordion-button fw-bold bg-light text-dark collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#job1">
+                    <span class="badge bg-danger me-3">Full-time</span>
+                    Sales Associate / Parts Consultant
+                </button>
+            </h2>
+            <div id="job1" class="accordion-collapse collapse" data-bs-parent="#jobsAccordion">
+                <div class="accordion-body bg-white">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h6 class="fw-bold text-danger"><i class="fas fa-tasks me-2"></i> Job Description:</h6>
+                            <ul class="small text-secondary mb-3">
+                                <li>Consult and sell motorcycle parts at the store.</li>
+                                <li>Arrange and display merchandise attractively.</li>
+                                <li>Answer customer queries regarding products.</li>
+                            </ul>
+
+                            <h6 class="fw-bold text-danger"><i class="fas fa-user-check me-2"></i> Requirements:</h6>
+                            <ul class="small text-secondary mb-0">
+                                <li>Male/Female aged 18-25, agile, honest.</li>
+                                <li>Passion for motorcycles is a plus.</li>
+                                <li>No experience required (training provided).</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4 border-start d-flex flex-column justify-content-center align-items-center">
+                            <p class="fw-bold mb-1">Salary: 7 - 10 Million VND</p>
+                            <p class="small text-muted mb-3">Deadline: 30/12/2025</p>
+                            <a href="mailto:hr@motoshop.com?subject=Application_Sales_YourName" class="btn btn-danger px-4 rounded-pill fw-bold">
+                                Apply Now
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item border-0 mb-3 rounded overflow-hidden">
+            <h2 class="accordion-header">
+                <button class="accordion-button fw-bold bg-light text-dark collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#job2">
+                    <span class="badge bg-danger me-3">Technical</span>
+                    Mechanic / Parts Assembler
+                </button>
+            </h2>
+            <div id="job2" class="accordion-collapse collapse" data-bs-parent="#jobsAccordion">
+                <div class="accordion-body bg-white">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h6 class="fw-bold text-danger"><i class="fas fa-tasks me-2"></i> Job Description:</h6>
+                            <ul class="small text-secondary mb-3">
+                                <li>Perform replacement and assembly of parts for customers.</li>
+                                <li>Basic motorcycle inspection and maintenance.</li>
+                                <li>Provide technical advice to customers when needed.</li>
+                            </ul>
+
+                            <h6 class="fw-bold text-danger"><i class="fas fa-user-check me-2"></i> Requirements:</h6>
+                            <ul class="small text-secondary mb-0">
+                                <li>At least 1 year of experience in motorcycle repair.</li>
+                                <li>Careful, meticulous, and responsible.</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4 border-start d-flex flex-column justify-content-center align-items-center">
+                            <p class="fw-bold mb-1">Salary: 10 - 15 Million VND</p>
+                            <p class="small text-muted mb-3">Deadline: 30/12/2025</p>
+                            <a href="mailto:hr@motoshop.com?subject=Application_Mechanic_YourName" class="btn btn-danger px-4 rounded-pill fw-bold">
+                                Apply Now
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="card bg-light border-0 mt-5 p-4 text-center">
+        <h5 class="fw-bold mb-3">Didn't find a suitable position?</h5>
+        <p class="text-secondary mb-3">
+            Don't hesitate to send us your CV. We will contact you as soon as a position matching your skills becomes available.
+        </p>
+        <div>
+            <a href="mailto:hr@motoshop.com" class="text-decoration-none fw-bold text-danger fs-5">
+                <i class="far fa-envelope me-2"></i> hr@motoshop.com
+            </a>
+            <span class="mx-3 text-muted">|</span>
+            <span class="fw-bold text-dark fs-5"><i class="fas fa-phone-alt me-2"></i> 0909 123 456 (HR Dept)</span>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Hover effect for benefit cards */
+    .hover-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        .hover-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
+        }
+
+    /* Style for Accordion */
+    .accordion-button:not(.collapsed) {
+        color: #d70018;
+        background-color: #fce8e8;
+        box-shadow: inset 0 -1px 0 rgba(0,0,0,.125);
+    }
+
+    .accordion-button:focus {
+        border-color: #d70018;
+        box-shadow: 0 0 0 0.25rem rgba(215, 0, 24, 0.25);
+    }
+</style>

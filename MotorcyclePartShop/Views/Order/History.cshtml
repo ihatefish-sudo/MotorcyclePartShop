@@ -1,0 +1,339 @@
+﻿@model IEnumerable<MotorcyclePartShop.Models.Order>
+@{
+    ViewData["Title"] = "Order History";
+}
+
+<style>
+    body {
+        background-color: #f5f5f5;
+    }
+
+    .order-card {
+        background: #fff;
+        margin-bottom: 20px;
+        border-radius: 4px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .order-header {
+        border-bottom: 1px solid #eaeaea;
+        padding: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .order-body {
+        padding: 15px;
+    }
+
+    .order-item {
+        display: flex;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #f1f1f1;
+        margin-bottom: 15px;
+    }
+
+        .order-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+    .item-img {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        flex-shrink: 0;
+    }
+
+    .item-info {
+        flex-grow: 1;
+        padding-left: 15px;
+    }
+
+    .order-footer {
+        padding: 15px;
+        background-color: #fffbfb;
+        border-top: 1px dotted #e0e0e0;
+        text-align: right;
+    }
+
+    .total-price {
+        font-size: 20px;
+        color: #d70018;
+        font-weight: bold;
+    }
+
+    .status-text {
+        text-transform: uppercase;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .btn-buy-again-item {
+        font-size: 12px;
+        padding: 4px 10px;
+        margin-top: 5px;
+        border-radius: 2px;
+    }
+</style>
+
+<div class="container py-4">
+    <h4 class="fw-bold mb-4 text-secondary">
+        <i class="fas fa-history me-2"></i> Purchase History
+    </h4>
+
+    @if (Model != null && Model.Any())
+    {
+        @foreach (var order in Model)
+        {
+            <div class="order-card">
+                <div class="order-header">
+                    <div>
+                        <span class="fw-bold text-dark me-2">MOTO SHOP</span>
+                        <span class="badge bg-light text-secondary border">@order.TrackingCode</span>
+                        <span class="text-muted small ms-2">@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</span>
+                    </div>
+                    <div>
+                        @if (order.DeliveryStatus == "Completed")
+                        {
+                            <span class="status-text text-success"><i class="fas fa-check-circle"></i> COMPLETED</span>
+                        }
+                        else if (order.DeliveryStatus == "Cancelled" || order.DeliveryStatus == "CANCELLED")
+                        {
+                            <span class="status-text text-danger"><i class="fas fa-times-circle"></i> CANCELLED</span>
+                        }
+                        else if (order.DeliveryStatus == "Shipping")
+                        {
+                            <span class="status-text text-info"><i class="fas fa-truck"></i> SHIPPING</span>
+                        }
+                        else if (order.DeliveryStatus == "Payment Failed")
+                        {
+                            <span class="status-text text-warning"><i class="fas fa-clock"></i> PAYMENT FAILED</span>
+                        }
+                        else
+                        {
+                            <span class="status-text text-warning"><i class="fas fa-clock"></i> PENDING</span>
+                        }
+
+                        <span class="mx-2 text-muted">|</span>
+                        <span class="text-uppercase fw-bold small text-muted">@order.PaymentStatus</span>
+                    </div>
+                </div>
+
+                <div class="order-body">
+                    @if (order.Items != null && order.Items.Any())
+                    {
+                        foreach (var item in order.Items)
+                        {
+                            <div class="order-item">
+                                <a href="/Product/Details/@item.ProductId">
+                                    <img src="@(item.Product.MainImage.StartsWith("http") ? item.Product.MainImage : "/images/products/" + item.Product.MainImage)"
+                                         class="item-img" alt="Product Image">
+                                </a>
+
+                                <div class="item-info d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <a href="/Product/Details/@item.ProductId" class="text-decoration-none text-dark">
+                                            <h6 class="mb-1">@item.Product.ProductName</h6>
+                                        </a>
+                                        <small class="text-muted">x @item.Quantity</small>
+                                    </div>
+
+                                    <div class="text-end d-flex flex-column align-items-end">
+                                        @if (item.Price != item.Product.Price)
+                                        {
+                                            <span class="text-muted text-decoration-line-through small">@item.Product.Price.ToString("#,##0")₫</span>
+                                        }
+                                        <span class="text-danger fw-bold">@item.Price.ToString("#,##0")₫</span>
+
+                                        @if (order.DeliveryStatus == "Completed" || order.DeliveryStatus == "Cancelled" || order.DeliveryStatus == "CANCELLED" || order.DeliveryStatus == "Returned")
+                                        {
+                                            <a href="/Product/Details/@item.ProductId" class="btn btn-outline-danger btn-buy-again-item">
+                                                Buy Again
+                                            </a>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center mb-0">No items details found.</p>
+                    }
+                </div>
+
+                <div class="order-footer">
+                    <div class="mb-3">
+                        <span class="text-muted">Order Total:</span>
+                        <span class="total-price ms-2">@order.TotalAmount.ToString("#,##0")₫</span>
+                    </div>
+
+                    <div>
+                        @if (order.PaymentMethod == "VNPAY" && order.PaymentStatus == "Pending" && order.DeliveryStatus != "Cancelled" && order.DeliveryStatus != "CANCELLED")
+                        {
+                            <div class="d-inline-block text-start me-3">
+                                <small class="text-danger d-block fst-italic"><i class="fas fa-exclamation-circle"></i> Unpaid Order</small>
+                            </div>
+                            <a href="/Payment/CreatePaymentUrl?orderId=@order.OrderId" class="btn btn-danger fw-bold me-2">
+                                Pay Now (VNPAY)
+                            </a>
+                        }
+
+                        @if (order.DeliveryStatus == "Shipping")
+                        {
+                            <button type="button"
+                                    class="btn btn-success fw-bold text-white me-2"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#receivedModal"
+                                    data-url="/Order/ConfirmReceived/@order.OrderId">
+                                Received Order
+                            </button>
+                        }
+
+                        @if (order.DeliveryStatus == "Pending")
+                        {
+                            <button type="button"
+                                    class="btn btn-outline-danger fw-bold me-2"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#cancelModal"
+                                    data-id="@order.OrderId">
+                                Cancel Order
+                            </button>
+                        }
+
+                        <a href="/Order/Details/@order.OrderId" class="btn btn-outline-secondary">
+                            View Order Details
+                        </a>
+
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="text-center py-5 bg-white rounded shadow-sm">
+            <img src="https://deo.shopeemobile.com/shopee/shopee-pcmall-live-sg/assets/5fafbb923393b712b96488590b8f781f.png"
+                 alt="No Order" style="width: 150px; opacity: 0.5;">
+            <p class="text-muted fs-5 mt-3">No orders yet</p>
+            <a href="/Product" class="btn btn-danger px-4">Go Shopping</a>
+        </div>
+    }
+</div>
+
+<div class="modal fade" id="receivedModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-success text-white border-bottom-0">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-box-check me-2"></i> Confirm Delivery
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-4 text-center">
+                <div class="mb-3">
+                    <i class="fas fa-check-circle text-success display-3"></i>
+                </div>
+                <h5 class="fw-bold">Have you received this order?</h5>
+                <p class="text-muted small mb-0">
+                    By confirming, the order status will be updated to "Completed".
+                </p>
+            </div>
+            <div class="modal-footer border-top-0 justify-content-center pb-4">
+                <button type="button" class="btn btn-light border px-4" data-bs-dismiss="modal">Not yet</button>
+                <a href="#" id="confirmReceivedBtn" class="btn btn-success px-4 fw-bold">
+                    Yes, Received
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white border-bottom-0">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-exclamation-triangle me-2"></i> Cancel Order
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-4 text-center">
+                <div class="mb-3">
+                    <i class="fas fa-times-circle text-danger display-3"></i>
+                </div>
+                <h5 class="fw-bold">Are you sure you want to cancel?</h5>
+                <p class="text-muted small mb-0">
+                    This action cannot be undone. If you paid via VNPAY, the amount will be refunded.
+                </p>
+            </div>
+            <div class="modal-footer border-top-0 justify-content-center pb-4">
+                <button type="button" class="btn btn-light border px-4" data-bs-dismiss="modal">Close</button>
+
+                <form id="cancelOrderForm" method="post" action="">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger px-4 fw-bold">
+                        Yes, Cancel Order
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+    <script>
+        // Configure Toastr
+        toastr.options = {
+            "closeButton": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "timeOut": "3000"
+        };
+
+        $(document).ready(function () {
+            // Display Toastr from TempData
+            var successMsg = '@TempData["Success"]';
+            var errorMsg = '@TempData["Error"]';
+
+            if (successMsg) {
+                toastr.success(successMsg, 'Success');
+            }
+            if (errorMsg) {
+                toastr.error(errorMsg, 'Error');
+            }
+        });
+
+        // 1. Logic cho Modal Nhận hàng
+        var receivedModal = document.getElementById('receivedModal');
+        if (receivedModal) {
+            receivedModal.addEventListener('show.bs.modal', function (event) {
+                var button = event.relatedTarget;
+                var url = button.getAttribute('data-url');
+                var confirmBtn = receivedModal.querySelector('#confirmReceivedBtn');
+                confirmBtn.href = url;
+            });
+        }
+
+        // 2. Logic cho Modal Hủy đơn (MỚI)
+        var cancelModal = document.getElementById('cancelModal');
+        if (cancelModal) {
+            cancelModal.addEventListener('show.bs.modal', function (event) {
+                var button = event.relatedTarget;
+                var orderId = button.getAttribute('data-id');
+
+                // Cập nhật Action của Form để trỏ về đúng OrderId
+                var form = cancelModal.querySelector('#cancelOrderForm');
+                form.action = '/Order/CancelOrder/' + orderId;
+            });
+        }
+    </script>
+}

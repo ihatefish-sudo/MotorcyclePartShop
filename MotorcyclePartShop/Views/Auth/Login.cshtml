@@ -1,0 +1,96 @@
+﻿@{
+    ViewData["Title"] = "Login";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-danger text-white text-center py-3">
+                    <h4 class="mb-0 fw-bold">LOGIN</h4>
+                </div>
+                <div class="card-body p-4">
+
+                    <form action="/Auth/Login" method="post">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Email</label>
+                            <input type="email" name="email" class="form-control py-2" placeholder="Enter email..." required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Password</label>
+                            <div class="position-relative">
+                                <input type="password" name="password" class="form-control py-2 pe-5" id="loginPass" placeholder="Enter password..." required>
+
+                                <span class="position-absolute top-50 end-0 translate-middle-y me-3"
+                                      style="cursor: pointer; z-index: 10;"
+                                      onclick="togglePassword('loginPass', 'iconLoginPass')">
+                                    <i class="fas fa-eye text-secondary" id="iconLoginPass"></i>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-danger py-2 fw-bold">LOGIN</button>
+                        </div>
+                    </form>
+
+                    <div class="text-center mt-3">
+                        <span>Don't have an account?</span>
+                        <a href="/Auth/Register" class="text-danger fw-bold text-decoration-none">Register now</a>
+                    </div>
+                    <div class="text-center mt-3">
+                        <span>Forgot your password?</span>
+                        <a href="/Auth/ForgotPassword" class="text-danger fw-bold text-decoration-none">Reset password</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+    <script>
+        // Cấu hình Toastr
+        toastr.options = {
+            "closeButton": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "timeOut": "3000"
+        };
+
+        // Hàm hiện/ẩn mật khẩu (Giữ nguyên)
+        function togglePassword(inputId, iconId) {
+            var input = document.getElementById(inputId);
+            var icon = document.getElementById(iconId);
+
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.remove("fa-eye");
+                icon.classList.add("fa-eye-slash");
+            } else {
+                input.type = "password";
+                icon.classList.remove("fa-eye-slash");
+                icon.classList.add("fa-eye");
+            }
+        }
+
+        // 2. Logic hiển thị thông báo
+        $(document).ready(function () {
+            // Lấy thông báo từ Server
+            var errorMsg = '@ViewBag.Error';       // Lỗi đăng nhập (sai pass, email...)
+            var successMsg = '@TempData["Success"]'; // Thành công (từ trang Register chuyển qua)
+
+            if (errorMsg) {
+                toastr.error(errorMsg, 'Login Failed');
+            }
+
+            if (successMsg) {
+                toastr.success(successMsg, 'Success');
+            }
+        });
+    </script>
+}

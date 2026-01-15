@@ -1,0 +1,244 @@
+﻿@model MotorcyclePartShop.Models.Product
+@{
+    ViewData["Title"] = "Edit Product";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0 fw-bold"><i class="fas fa-edit me-2"></i> Edit Product: @Model.ProductName</h5>
+            </div>
+            <div class="card-body p-4">
+
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div asp-validation-summary="All" class="alert alert-danger mb-3"></div>
+                }
+
+                <form asp-action="EditProduct" method="post" enctype="multipart/form-data">
+                    <input type="hidden" asp-for="ProductId" />
+                    <input type="hidden" asp-for="MainImage" />
+                    <input type="hidden" asp-for="CreatedAt" />
+
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label fw-bold">Product Name</label>
+                                    <input asp-for="ProductName" class="form-control" required />
+                                    <span asp-validation-for="ProductName" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Category</label>
+                                    <select asp-for="CategoryId" id="categorySelect" class="form-select"
+                                            asp-items="@(new SelectList(ViewBag.Categories, "CategoryId", "CategoryName"))"></select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Brand</label>
+                                    <select asp-for="BrandId" class="form-select"
+                                            asp-items="@(new SelectList(ViewBag.Brands, "BrandId", "BrandName"))">
+                                        <option value="">-- Select Brand (Optional) --</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Price (VND)</label>
+                                    <input asp-for="Price" type="number" class="form-control" required />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Stock</label>
+                                    <input asp-for="Stock" type="number" class="form-control" required />
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Description</label>
+                                <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+                            </div>
+
+                            <div class="card mt-4 border-secondary" id="specsContainer" style="display:none;">
+                                <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0 fw-bold"><i class="fas fa-cogs me-2"></i> Technical Specifications</h6>
+                                    <button type="button" class="btn btn-sm btn-light text-dark fw-bold" id="btnAddSpec">
+                                        <i class="fas fa-plus"></i> Add Row
+                                    </button>
+                                </div>
+                                <div class="card-body p-0">
+                                    <table class="table table-bordered mb-0" id="specTable">
+                                        <thead class="bg-light">
+                                            <tr>
+                                                <th style="width: 40%">Spec Name (e.g. Engine)</th>
+                                                <th>Value (e.g. 150cc)</th>
+                                                <th style="width: 50px"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @{
+                                                var specList = Model.Specifications != null
+                                                ? Model.Specifications.ToList()
+                                                : new List<MotorcyclePartShop.Models.ProductSpecification>();
+                                            }
+
+                                            @if (specList.Count > 0)
+                                            {
+                                                for (int i = 0; i < specList.Count; i++)
+                                                {
+                                                    <tr>
+                                                        <td>
+                                                            <input name="specs[@i].SpecName" value="@specList[i].SpecName" class="form-control" placeholder="Spec Name..." />
+                                                        </td>
+                                                        <td>
+                                                            <input name="specs[@i].SpecValue" value="@specList[i].SpecValue" class="form-control" placeholder="Value..." />
+                                                        </td>
+                                                        <td class="text-center">
+                                                            <button type="button" class="btn btn-danger btn-sm delete-row"><i class="fas fa-times"></i></button>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            }
+                                        </tbody>
+                                    </table>
+
+                                    <p class="text-muted text-center py-2 m-0" id="noSpecText"
+                                       style="@(specList.Count > 0 ? "display:none" : "display:block")">
+                                        No specifications added yet.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="mb-3 text-center p-3 border rounded bg-light">
+                                <label class="form-label fw-bold d-block">Current Image</label>
+                                @{
+                                    string imgSrc = Model.MainImage != null && Model.MainImage.StartsWith("http")
+                                    ? Model.MainImage
+                                    : "/images/products/" + Model.MainImage;
+                                }
+                                <img src="@imgSrc" class="img-fluid rounded shadow-sm mb-2" style="max-height: 200px; object-fit: contain;" />
+                                <div class="small text-muted">@Model.MainImage</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Choose New Image (Optional)</label>
+                                <input type="file" name="imageFile" class="form-control" accept="image/*" />
+                            </div>
+
+                            <div class="card p-3 border-0 bg-light">
+                                <h6 class="fw-bold border-bottom pb-2 mb-3">Display Settings</h6>
+
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" asp-for="IsActive">
+                                    <label class="form-check-label" for="IsActive">Active on Website</label>
+                                </div>
+
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" asp-for="IsFeatured">
+                                    <label class="form-check-label" for="IsFeatured">Featured Product</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                        <a href="/Admin/Products" class="btn btn-secondary px-4">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-4 fw-bold">
+                            <i class="fas fa-save me-2"></i> Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+    <script>
+        // 2. CẤU HÌNH VÀ HIỂN THỊ TOASTR
+        $(document).ready(function() {
+            // Cấu hình Toastr
+            toastr.options = {
+                "closeButton": true,
+                "progressBar": true,
+                "positionClass": "toast-top-right",
+                "timeOut": "3000"
+            };
+
+            // Lấy thông báo từ TempData
+            var successMsg = '@TempData["Success"]';
+            var errorMsg = '@TempData["Error"]';
+
+            if (successMsg) {
+                toastr.success(successMsg, 'Success');
+            }
+            if (errorMsg) {
+                toastr.error(errorMsg, 'Error');
+            }
+        });
+
+        // 3. LOGIC XỬ LÝ SPECIFICATIONS (GIỮ NGUYÊN)
+        document.addEventListener("DOMContentLoaded", function() {
+            const tableBody = document.querySelector("#specTable tbody");
+            const btnAdd = document.getElementById("btnAddSpec");
+            const noSpecText = document.getElementById("noSpecText");
+            const categorySelect = document.getElementById("categorySelect");
+            const specsContainer = document.getElementById("specsContainer");
+
+            function checkCategory() {
+                if (!categorySelect || categorySelect.selectedIndex === -1) return;
+                const selectedText = categorySelect.options[categorySelect.selectedIndex].text.toLowerCase();
+                if (selectedText.includes("motorcycle") || selectedText.includes("xe máy")) {
+                    specsContainer.style.display = "block";
+                } else {
+                    specsContainer.style.display = "none";
+                }
+            }
+
+            checkCategory();
+            if(categorySelect) categorySelect.addEventListener("change", checkCategory);
+
+            if(btnAdd) {
+                btnAdd.addEventListener("click", function() {
+                    if(noSpecText) noSpecText.style.display = 'none';
+                    const index = tableBody.querySelectorAll("tr").length;
+                    const row = `
+                        <tr>
+                            <td><input name="specs[${index}].SpecName" class="form-control" placeholder="Spec Name..." /></td>
+                            <td><input name="specs[${index}].SpecValue" class="form-control" placeholder="Value..." /></td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-danger btn-sm delete-row"><i class="fas fa-times"></i></button>
+                            </td>
+                        </tr>`;
+                    tableBody.insertAdjacentHTML('beforeend', row);
+                });
+            }
+
+            if(tableBody) {
+                tableBody.addEventListener("click", function(e) {
+                    if (e.target.closest(".delete-row")) {
+                        e.target.closest("tr").remove();
+                        const rows = tableBody.querySelectorAll("tr");
+                        rows.forEach((row, i) => {
+                            const inputs = row.querySelectorAll("input");
+                            inputs[0].name = `specs[${i}].SpecName`;
+                            inputs[1].name = `specs[${i}].SpecValue`;
+                        });
+                        if (rows.length === 0 && noSpecText) noSpecText.style.display = 'block';
+                    }
+                });
+            }
+        });
+    </script>
+}

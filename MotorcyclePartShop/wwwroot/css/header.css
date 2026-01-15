@@ -1,0 +1,23 @@
+﻿/* Header CSS */
+.header-nav .nav-link {
+    transition: background-color 0.3s;
+    font-size: 14px;
+    text-transform: uppercase;
+}
+
+    /* Hiệu ứng hover cho menu */
+    .header-nav .nav-link:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #fff !important;
+    }
+
+/* Input search tùy chỉnh */
+.header-top .form-control:focus {
+    box-shadow: none;
+    border-color: var(--primary-red);
+}
+
+/* Badge số lượng giỏ hàng */
+.badge.bg-danger {
+    border: 1px solid #fff;
+}

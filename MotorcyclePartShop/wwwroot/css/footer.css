@@ -1,0 +1,17 @@
+﻿/* Footer CSS */
+footer a.hover-white {
+    transition: color 0.2s;
+}
+
+    footer a.hover-white:hover {
+        color: #fff !important;
+    }
+
+footer .fab {
+    transition: transform 0.2s;
+}
+
+    footer .fab:hover {
+        transform: translateY(-3px);
+        color: var(--primary-red) !important;
+    }

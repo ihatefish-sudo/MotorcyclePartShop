@@ -1,0 +1,36 @@
+/* Font ch? c? b?n */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+    background-color: #f8f9fa; /* Màu n?n xám nh? cho toàn trang */
+}
+
+/* Bi?n màu s?c ch? ??o */
+:root {
+    --primary-red: #d70018;
+    --hover-red: #be0015;
+}
+
+/* Ti?n ích text */
+.text-danger {
+    color: var(--primary-red) !important;
+}
+
+.bg-danger {
+    background-color: var(--primary-red) !important;
+}
+
+.btn-danger {
+    background-color: var(--primary-red);
+    border-color: var(--primary-red);
+}
+
+    .btn-danger:hover {
+        background-color: var(--hover-red);
+        border-color: var(--hover-red);
+    }
+
+/* Link m?c ??nh */
+a {
+    text-decoration: none;
+}

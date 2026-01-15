@@ -1,0 +1,183 @@
+﻿@model IEnumerable<MotorcyclePartShop.Models.Promotion>
+
+@{
+    ViewData["Title"] = "Promotion Management";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fw-bold"> PROMOTION MANAGEMENT</h5>
+        <a href="/Admin/CreatePromotion" class="btn btn-sm btn-light text-danger fw-bold shadow-sm">
+            <i class="fas fa-plus-circle me-1"></i> Create New
+        </a>
+    </div>
+
+    <div class="card-body bg-light border-bottom">
+        <form action="/Admin/Promotions" method="get" class="row g-2 align-items-center">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" name="search" class="form-control border-start-0 ps-0"
+                           placeholder="Search by Promo Code..." value="@ViewBag.CurrentSearch">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select name="status" class="form-select" onchange="this.form.submit()">
+                    <option value="">-- All Status --</option>
+                    <!option value="active" @(ViewBag.CurrentStatus == "active" ? "selected" : "")>Active (Running)</!option>
+                    <!option value="expired" @(ViewBag.CurrentStatus == "expired" ? "selected" : "")>Expired / Inactive</!option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-1">
+                <button type="submit" class="btn btn-dark flex-grow-1 fw-bold">Filter</button>
+                <a href="/Admin/Promotions" class="btn btn-outline-secondary" title="Reset"><i class="fas fa-undo"></i></a>
+            </div>
+        </form>
+    </div>
+
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light text-secondary">
+                    <tr>
+                        <th class="ps-4">Promo Code</th>
+                        <th>Discount</th>
+                        <th>Validity Period</th>
+                        <th>Status</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="ps-4 fw-bold text-danger">
+                                    <i class=" me-2 text-muted"></i> @item.PromoCode
+                                </td>
+                                <td>
+                                    <span class="badge bg-danger rounded-pill px-3">@item.DiscountPercent% OFF</span>
+                                </td>
+                                <td>
+                                    <div class="small text-muted">
+                                        <i class=" me-1"></i> @item.StartDate.ToString("dd/MM/yyyy")
+                                        <span class="mx-1 text-dark fw-bold">→</span>
+                                        @item.EndDate.ToString("dd/MM/yyyy")
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (item.IsActive && item.EndDate >= DateTime.Now)
+                                    {
+                                        <span class="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1">
+                                            <i class=" me-1 small"></i> Active
+                                        </span>
+                                    }
+                                    else if (!item.IsActive)
+                                    {
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary px-2 py-1">
+                                            <i class=" me-1 small"></i> Disabled
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning px-2 py-1">
+                                            <i class=" me-1 small"></i> Expired
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-end pe-4">
+                                    <a href="/Admin/EditPromotion/@item.PromotionId" class="btn btn-sm btn-outline-primary me-1 fw-bold" title="Edit">
+                                        Edit
+                                    </a>
+
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-danger fw-bold"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#deleteModal"
+                                            data-url="/Admin/DeletePromotion/@item.PromotionId"
+                                            title="Delete">
+                                        Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="fas fa-tags fa-3x mb-3 text-secondary opacity-50"></i>
+                                <p class="mb-0">No promotions found matching your criteria.</p>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white border-bottom-0">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-exclamation-triangle me-2"></i> Confirm Deletion
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-4 text-center">
+                <div class="mb-3">
+                    <i class="fas fa-trash-alt text-danger fa-3x opacity-50"></i>
+                </div>
+                <h5 class="fw-bold">Delete this Promotion?</h5>
+                <p class="text-muted small mb-0">This action cannot be undone. Are you sure you want to proceed?</p>
+            </div>
+            <div class="modal-footer border-top-0 justify-content-center pb-4">
+                <button type="button" class="btn btn-light border px-4" data-bs-dismiss="modal">Cancel</button>
+                <a href="#" id="confirmDeleteBtn" class="btn btn-danger px-4 fw-bold shadow-sm">Yes, Delete It</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+    <script>
+        // 2. Cấu hình Toastr
+        toastr.options = {
+            "closeButton": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "timeOut": "3000"
+        };
+
+        $(document).ready(function () {
+            // 3. Logic hiển thị Toastr từ TempData
+            var successMsg = '@TempData["Success"]';
+            var errorMsg = '@TempData["Error"]';
+
+            if (successMsg) {
+                toastr.success(successMsg, 'Success');
+            }
+            if (errorMsg) {
+                toastr.error(errorMsg, 'Error');
+            }
+        });
+
+        // 4. Logic xử lý Modal Xóa
+        var deleteModal = document.getElementById('deleteModal');
+        if (deleteModal) {
+            deleteModal.addEventListener('show.bs.modal', function (event) {
+                var button = event.relatedTarget;
+                var url = button.getAttribute('data-url');
+                var confirmBtn = deleteModal.querySelector('#confirmDeleteBtn');
+                confirmBtn.href = url;
+            });
+        }
+    </script>
+}

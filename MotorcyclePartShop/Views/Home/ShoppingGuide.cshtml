@@ -1,0 +1,172 @@
+﻿@{
+    ViewData["Title"] = "Shopping Guide";
+}
+
+<div class="bg-light py-4 mb-5">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-dark">Home</a></li>
+                <li class="breadcrumb-item active text-danger fw-bold" aria-current="page">Shopping Guide</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <div class="text-center mb-5">
+        <h2 class="text-uppercase fw-bold text-danger">
+            <i class="fas fa-shopping-bag me-2"></i> How to Order
+        </h2>
+        <p class="text-muted">Simple steps to get your favorite motorcycle parts at Moto Shop</p>
+        <div class="d-flex justify-content-center">
+            <div style="width: 60px; height: 3px; background-color: #d70018;"></div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm text-center p-4 step-card">
+                <div class="step-icon mx-auto mb-3 bg-danger text-white rounded-circle d-flex align-items-center justify-content-center fs-3">
+                    <i class="fas fa-search"></i>
+                </div>
+                <h5 class="fw-bold">1. Search & Select</h5>
+                <p class="text-muted small">
+                    Browse our product catalog or use the search bar to find the parts you need. Click on the product to view details.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm text-center p-4 step-card">
+                <div class="step-icon mx-auto mb-3 bg-danger text-white rounded-circle d-flex align-items-center justify-content-center fs-3">
+                    <i class="fas fa-cart-plus"></i>
+                </div>
+                <h5 class="fw-bold">2. Add to Cart</h5>
+                <p class="text-muted small">
+                    Select quantity and click <strong>"Add to Cart"</strong> to continue shopping or <strong>"Buy Now"</strong> to proceed to checkout immediately.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm text-center p-4 step-card">
+                <div class="step-icon mx-auto mb-3 bg-danger text-white rounded-circle d-flex align-items-center justify-content-center fs-3">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                </div>
+                <h5 class="fw-bold">3. Checkout</h5>
+                <p class="text-muted small">
+                    Review your cart, apply coupons (if any). Enter your shipping address and choose a payment method.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-4 offset-md-2">
+            <div class="card h-100 border-0 shadow-sm text-center p-4 step-card">
+                <div class="step-icon mx-auto mb-3 bg-danger text-white rounded-circle d-flex align-items-center justify-content-center fs-3">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h5 class="fw-bold">4. Confirmation</h5>
+                <p class="text-muted small">
+                    Complete the order. You will receive an order confirmation via email and a tracking code.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm text-center p-4 step-card">
+                <div class="step-icon mx-auto mb-3 bg-danger text-white rounded-circle d-flex align-items-center justify-content-center fs-3">
+                    <i class="fas fa-shipping-fast"></i>
+                </div>
+                <h5 class="fw-bold">5. Delivery</h5>
+                <p class="text-muted small">
+                    We will pack and ship your order. You can track your order status anytime on our website.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-5 pt-4">
+        <div class="col-lg-8 mx-auto">
+            <h4 class="fw-bold mb-4 border-start border-5 border-danger ps-3">Frequently Asked Questions</h4>
+
+            <div class="accordion shadow-sm" id="faqAccordion">
+                <div class="accordion-item border-0 mb-2">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                            Do I need an account to place an order?
+                        </button>
+                    </h2>
+                    <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-secondary">
+                            Yes, creating an account helps you track orders easily and receive exclusive member offers.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item border-0 mb-2">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                            What payment methods do you accept?
+                        </button>
+                    </h2>
+                    <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-secondary">
+                            We currently support <strong>Cash on Delivery (COD)</strong> and <strong>Bank Transfer</strong>.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item border-0 mb-2">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                            How can I track my order?
+                        </button>
+                    </h2>
+                    <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-secondary">
+                            You can use the <strong>"Track Order"</strong> feature in the menu header. Just enter your Order ID to see the status.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-5">
+                <p class="text-muted">Still have questions?</p>
+                <a href="/Home/Contact" class="btn btn-outline-danger px-4 rounded-pill fw-bold">
+                    <i class="fas fa-headset me-2"></i> Contact Support
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Custom CSS for Steps */
+    .step-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        .step-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
+        }
+
+    .step-icon {
+        width: 70px;
+        height: 70px;
+        box-shadow: 0 4px 10px rgba(215, 0, 24, 0.3);
+    }
+
+    /* Accordion Customization */
+    .accordion-button:not(.collapsed) {
+        color: #d70018;
+        background-color: #fce8e8; /* Light red background */
+        box-shadow: none;
+    }
+
+    .accordion-button:focus {
+        box-shadow: 0 0 0 0.25rem rgba(215, 0, 24, 0.25);
+    }
+</style>

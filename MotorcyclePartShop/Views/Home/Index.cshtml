@@ -1,0 +1,383 @@
+﻿@model MotorcyclePartShop.Models.HomeViewModel
+@using MotorcyclePartShop.Models
+
+@{
+    ViewData["Title"] = "Home - Motorcycle Parts Shop";
+
+    // --- FIX CS1977 ERROR: Explicit casting to avoid Dynamic binding issues ---
+    // 1. Get the date 10 days ago
+    var tenDaysAgo = DateTime.Now.AddDays(-10);
+
+    // 2. Cast Model.NewProducts to IEnumerable<Product> for LINQ compatibility
+    var productList = Model.NewProducts as IEnumerable<Product>;
+
+    // 3. Filter the list (with null safety check)
+    var recentProducts = productList != null
+        ? productList.Where(p => p.CreatedAt >= tenDaysAgo).ToList()
+        : new List<Product>();
+}
+
+<style>
+    /* Custom CSS */
+    :root {
+        --primary-color: #d70018; /* Signature Red */
+        --hover-color: #be0015;
+    }
+
+    /* Sidebar Categories */
+    .category-sidebar .list-group-item {
+        border: none;
+        border-bottom: 1px solid #eee;
+        font-size: 14px;
+        transition: 0.2s;
+    }
+
+        .category-sidebar .list-group-item:hover {
+            background-color: #f8f9fa;
+            color: var(--primary-color);
+            font-weight: 500;
+            padding-left: 20px;
+        }
+
+    .category-header {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 10px 15px;
+        font-weight: bold;
+        text-transform: uppercase;
+        border-radius: 5px 5px 0 0;
+    }
+
+    /* Product Card */
+    .product-card {
+        border: 1px solid #e0e0e0;
+        transition: all 0.3s ease;
+        height: 100%;
+        position: relative;
+        background: #fff;
+    }
+
+        .product-card:hover {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+            border-color: var(--primary-color);
+        }
+
+    .product-img-container {
+        height: 180px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px;
+    }
+
+        .product-img-container img {
+            max-height: 100%;
+            max-width: 100%;
+            object-fit: contain;
+        }
+
+    .product-body {
+        padding: 15px;
+        text-align: center;
+    }
+
+    .product-title {
+        font-size: 14px;
+        font-weight: 500;
+        color: #333;
+        height: 40px; /* Limit to 2 lines */
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        margin-bottom: 10px;
+        text-decoration: none;
+    }
+
+        .product-title:hover {
+            color: var(--primary-color);
+        }
+
+    .current-price {
+        color: var(--primary-color);
+        font-weight: bold;
+        font-size: 16px;
+    }
+
+    .old-price {
+        text-decoration: line-through;
+        color: #999;
+        font-size: 13px;
+        margin-left: 5px;
+    }
+
+    .discount-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: var(--primary-color);
+        color: white;
+        padding: 2px 8px;
+        font-size: 12px;
+        border-radius: 3px;
+        font-weight: bold;
+    }
+
+    /* Buttons */
+    .btn-buy-now {
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        width: 100%;
+        margin-top: 10px;
+        font-size: 14px;
+    }
+
+        .btn-buy-now:hover {
+            background-color: var(--hover-color);
+            color: white;
+        }
+
+    /* Section Headers */
+    .section-header {
+        border-bottom: 2px solid var(--primary-color);
+        margin-bottom: 20px;
+        margin-top: 40px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .section-title {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 8px 20px;
+        font-size: 16px;
+        font-weight: bold;
+        text-transform: uppercase;
+        border-radius: 5px 5px 0 0;
+        display: inline-block;
+        margin-bottom: 0;
+    }
+
+    .view-all {
+        color: #555;
+        font-size: 14px;
+        text-decoration: none;
+    }
+
+        .view-all:hover {
+            color: var(--primary-color);
+        }
+
+    /* Style specifically for Warning Toast to make it clickable */
+    #toast-container > .toast-warning {
+        cursor: pointer;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-3 d-none d-md-block">
+            <div class="category-sidebar shadow-sm">
+                <div class="category-header">
+                    <i class="fas fa-bars me-2"></i> Categories
+                </div>
+                <ul class="list-group list-group-flush">
+                    @if (Model.Categories != null)
+                    {
+                        foreach (var cat in Model.Categories)
+                        {
+                            <a href="/Product?categoryId=@cat.CategoryId" class="list-group-item list-group-item-action">
+                                <i class="fas fa-caret-right me-2 text-secondary"></i> @cat.CategoryName
+                            </a>
+                        }
+                    }
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <div id="mainCarousel" class="carousel slide shadow-sm" data-bs-ride="carousel">
+                <div class="carousel-indicators">
+                    <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="0" class="active"></button>
+                    <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="1"></button>
+                </div>
+                <div class="carousel-inner rounded">
+                    <div class="carousel-item active">
+                        <img src="/images/banners/banner_2.jpg" class="d-block w-100" style="height: 350px; object-fit: cover;" alt="Banner 1">
+                    </div>
+                    <div class="carousel-item">
+                        <img src="/images/banners/banner_4.jpg" class="d-block w-100" style="height: 350px; object-fit: cover;" alt="Banner 2">
+                    </div>
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#mainCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#mainCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (Model.DiscountedProducts != null && Model.DiscountedProducts.Any())
+{
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title"><i class="fas fa-bolt me-2"></i> On Sale (after apply coupon)</h2>
+            <a href="/Product" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+        </div>
+        <div class="row row-cols-2 row-cols-md-4 g-3">
+            @foreach (var item in Model.DiscountedProducts)
+            {
+                var promo = item.PromotionProducts?.FirstOrDefault()?.Promotion;
+                double discount = promo != null ? promo.DiscountPercent : 0;
+                decimal newPrice = item.Price * (decimal)(1 - discount / 100);
+
+                <div class="col">
+                    <div class="product-card">
+                        @if (discount > 0)
+                        {
+                            <span class="discount-badge">-@discount%</span>
+                        }
+                        <div class="product-img-container">
+                            <img src="@(item.MainImage != null && item.MainImage.StartsWith("http") ? item.MainImage : "/images/products/" + item.MainImage)" alt="@item.ProductName">
+                        </div>
+                        <div class="product-body">
+                            <a href="/Product/Details/@item.ProductId" class="product-title" title="@item.ProductName">
+                                @item.ProductName
+                            </a>
+                            <div class="price-box">
+                                <span class="current-price">@newPrice.ToString("#,##0")₫</span>
+                                @if (discount > 0)
+                                {
+                                    <span class="old-price">@item.Price.ToString("#,##0")₫</span>
+                                }
+                            </div>
+                            <a href="/Product/Details/@item.ProductId" class="btn btn-sm btn-buy-now">
+                                <i class="fas me-1"></i> View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@if (Model.FeaturedProducts != null && Model.FeaturedProducts.Any())
+{
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title"><i class="fas fa-star me-2"></i> Featured Products</h2>
+            <a href="/Product?filter=featured" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+        </div>
+        <div class="row row-cols-2 row-cols-md-4 g-3">
+            @foreach (var item in Model.FeaturedProducts)
+            {
+                <div class="col">
+                    <div class="product-card">
+                        <div class="product-img-container">
+                            <img src="@(item.MainImage != null && item.MainImage.StartsWith("http") ? item.MainImage : "/images/products/" + item.MainImage)" alt="@item.ProductName">
+                        </div>
+                        <div class="product-body">
+                            <a href="/Product/Details/@item.ProductId" class="product-title" title="@item.ProductName">
+                                @item.ProductName
+                            </a>
+                            <div class="price-box">
+                                <span class="current-price">@item.Price.ToString("#,##0")₫</span>
+                            </div>
+                            <a href="/Product/Details/@item.ProductId" class="btn btn-sm btn-buy-now">
+                                <i class="fas me-1"></i> View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@if (recentProducts.Any())
+{
+    <div class="container mb-5">
+        <div class="section-header">
+            <h2 class="section-title"><i class="fas fa-newspaper me-2"></i> New Arrivals</h2>
+            <a href="/Product" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+        </div>
+        <div class="row row-cols-2 row-cols-md-4 g-3">
+            @foreach (var item in recentProducts)
+            {
+                <div class="col">
+                    <div class="product-card">
+                        <span class="discount-badge" style="background-color: #28a745;">NEW</span>
+                        <div class="product-img-container">
+                            <img src="@(item.MainImage != null && item.MainImage.StartsWith("http") ? item.MainImage : "/images/products/" + item.MainImage)" alt="@item.ProductName">
+                        </div>
+                        <div class="product-body">
+                            <a href="/Product/Details/@item.ProductId" class="product-title" title="@item.ProductName">
+                                @item.ProductName
+                            </a>
+                            <div class="price-box">
+                                <span class="current-price">@item.Price.ToString("#,##0")₫</span>
+                            </div>
+                            <a href="/Product/Details/@item.ProductId" class="btn btn-sm btn-buy-now">
+                                <i class="fas me-1"></i> View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            // Cấu hình Toastr
+            toastr.options = {
+                "closeButton": true,
+                "progressBar": true,
+                "positionClass": "toast-top-right",
+                "timeOut": "5000"
+            };
+
+            // --- 1. WELCOME TOASTR (Giữ nguyên) ---
+            var showWelcome = '@(ViewBag.ShowWelcomeUser == true ? "true" : "false")';
+            var userName = '@ViewBag.UserName';
+            if (showWelcome === 'true') {
+                toastr.success('Welcome back, ' + userName + '!', 'Login Successful');
+            }
+
+            // --- 2. TIMEOUT ORDER TOASTR (Cập nhật hiển thị TrackingCode) ---
+            var timeoutOrderId = '@ViewBag.TimeoutOrderId';
+            var timeoutTrackingCode = '@ViewBag.TimeoutTrackingCode';
+
+            if (timeoutOrderId && timeoutOrderId !== '') {
+                // Nếu có TrackingCode thì dùng, nếu không thì dùng tạm OrderId
+                var displayCode = timeoutTrackingCode && timeoutTrackingCode !== '' ? timeoutTrackingCode : '#' + timeoutOrderId;
+
+                toastr.warning(
+                    'Order with tracking code <strong>' + displayCode + '</strong> payment has timed out. Would you like to repurchase? <br/>Click to view details.',
+                    'Notification',
+                    {
+                        timeOut: 0,
+                        extendedTimeOut: 0,
+                        onclick: function () {
+                            // Link vẫn dùng OrderId vì Route thường cần ID
+                            window.location.href = '/Order/Details/' + timeoutOrderId;
+                        }
+                    }
+                );
+            }
+        });
+    </script>
+}

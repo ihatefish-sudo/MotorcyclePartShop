@@ -1,0 +1,39 @@
+﻿@{
+    ViewData["Title"] = "Order Success";
+    var trackingCode = ViewBag.TrackingCode;
+}
+
+<div class="container py-5 text-center">
+    <div class="card shadow-sm border-0 mx-auto" style="max-width: 600px;">
+        <div class="card-body p-5">
+            <div class="mb-4">
+                <i class="fas fa-check-circle text-success" style="font-size: 80px;"></i>
+            </div>
+
+            <h2 class="fw-bold text-uppercase text-success mb-3">Order Placed Successfully!</h2>
+
+            <p class="lead text-secondary mb-4">
+                Thank you for shopping at <strong>Moto Shop</strong>. <br>
+                Your order is currently being processed by our system.
+            </p>
+
+            <div class="alert alert-light border border-dashed mb-4">
+                <span class="text-muted small text-uppercase fw-bold d-block mb-1">Your Order Code</span>
+                <span class="fs-4 fw-bold text-danger">@trackingCode</span>
+            </div>
+
+            <p class="small text-muted mb-4">
+                We will contact you via phone to confirm your order shortly.
+            </p>
+
+            <div class="d-flex justify-content-center gap-3">
+                <a href="/" class="btn btn-outline-secondary">
+                    <i class="fas fa-home me-2"></i> Back to Home
+                </a>
+                <a href="/Product" class="btn btn-danger">
+                    <i class="fas fa-shopping-cart me-2"></i> Continue Shopping
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,198 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - MotorcyclePartShop</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/header.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/footer.css" asp-append-version="true" />
+
+    @await RenderSectionAsync("Styles", required: false)
+
+    <style>
+        /* Chatbot Widget Styles */
+        #chat-widget {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        /* Hiệu ứng rung nhẹ nút chat */
+        #chat-toggle {
+            transition: transform 0.3s;
+        }
+
+            #chat-toggle:hover {
+                transform: scale(1.1);
+            }
+
+        /* CSS cho thẻ sản phẩm trong khung chat */
+        .chat-product-list .card {
+            background: #fff;
+            border: 1px solid #f0f0f0;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-bottom: 8px;
+        }
+
+            .chat-product-list .card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 .25rem .5rem rgba(0,0,0,.1) !important;
+                border-color: #dc3545; /* Màu đỏ của theme */
+            }
+
+        .chat-product-list .card-title {
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+            color: #333;
+        }
+        /* Nút mua ngay nhỏ gọn */
+        .btn-xs {
+            padding: 2px 8px;
+            font-size: 0.75rem;
+            line-height: 1.5;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+    <header>
+        @await Html.PartialAsync("_Header")
+    </header>
+
+    <main role="main" class="flex-shrink-0">
+        @RenderBody()
+    </main>
+
+    <footer class="mt-auto">
+        @await Html.PartialAsync("_Footer")
+    </footer>
+
+    <div id="chat-widget">
+        <button id="chat-toggle" class="btn btn-danger rounded-circle shadow-lg p-3" style="width: 60px; height: 60px;">
+            <i class="fas fa-comment-dots fa-2x text-white"></i>
+        </button>
+
+        <div id="chat-box" class="card shadow-lg" style="display: none; width: 360px; height: 500px; position: absolute; bottom: 80px; right: 0; border-radius: 15px; overflow: hidden; border: none;">
+            <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center py-3">
+                <div class="d-flex align-items-center">
+                    <i class=" fa-lg me-2"></i>
+                    <div>
+                        <h6 class="mb-0 fw-bold">Shopping Assistant</h6>
+                        <small style="font-size: 0.7rem; opacity: 0.9;">Support 24/7</small>
+                    </div>
+                </div>
+                <button id="chat-close" class="btn btn-sm text-white" ><i class="fas fa-times"></i></button>
+            </div>
+
+            <div class="card-body bg-light" id="chat-messages" style="height: 380px; overflow-y: auto; padding: 15px; font-size: 0.9rem;">
+                <div class="d-flex flex-row justify-content-start mb-3">
+                    <div class="p-3 bg-white border rounded shadow-sm text-dark">
+                        Hello! I'm the AI Assistant of Moto Shop. How can I help you find parts today?
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer p-2 bg-white border-top">
+                <div class="input-group">
+                    <input type="text" id="chat-input" class="form-control border-0 bg-light rounded-start ps-3" placeholder="Type your question..." style="box-shadow: none;">
+                    <button id="chat-send" class="btn btn-danger rounded-end"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const toggleBtn = document.getElementById('chat-toggle');
+            const closeBtn = document.getElementById('chat-close');
+            const chatBox = document.getElementById('chat-box');
+            const chatInput = document.getElementById('chat-input');
+            const sendBtn = document.getElementById('chat-send');
+            const messagesArea = document.getElementById('chat-messages');
+
+            // Toggle Chat
+            toggleBtn.addEventListener('click', () => {
+                if (chatBox.style.display === 'none') {
+                    chatBox.style.display = 'block';
+                    // Animation Fade In
+                    chatBox.style.opacity = 0;
+                    let op = 0.1;
+                    let timer = setInterval(function () {
+                        if (op >= 1) {
+                            clearInterval(timer);
+                        }
+                        chatBox.style.opacity = op;
+                        op += op * 0.1;
+                    }, 10);
+                    chatInput.focus();
+                } else {
+                    chatBox.style.display = 'none';
+                }
+            });
+
+            closeBtn.addEventListener('click', () => chatBox.style.display = 'none');
+
+            // Gửi tin nhắn
+            function sendMessage() {
+                const text = chatInput.value.trim();
+                if (!text) return;
+
+                // 1. Hiện tin nhắn của khách
+                appendMessage(text, 'end', 'bg-danger text-white shadow-sm');
+                chatInput.value = '';
+
+                // Hiện loading
+                const loadingId = appendMessage('<i class="fas fa-spinner fa-spin me-2"></i> Thinking...', 'start', 'bg-white border text-muted fst-italic small');
+
+                // 2. Gọi API
+                $.post('/Chat/SendMessage', { userMessage: text }, function (data) {
+                    // Xóa loading
+                    const loadingMsg = document.getElementById(loadingId);
+                    if (loadingMsg) loadingMsg.remove();
+
+                    // Hiện tin nhắn của AI (data.reply chứa cả Text + HTML sản phẩm)
+                    // Không cần escape HTML vì chúng ta muốn render thẻ <div>, <img>
+                    let replyContent = data.reply || "Sorry, I didn't get that.";
+
+                    // Chuyển đổi ký tự xuống dòng \n thành <br> chỉ cho phần text (nếu cần),
+                    // nhưng vì ta trả về HTML block nên cứ để nguyên innerHTML xử lý.
+
+                    appendMessage(replyContent, 'start', 'bg-white border shadow-sm text-dark');
+                }).fail(function () {
+                    const loadingMsg = document.getElementById(loadingId);
+                    if (loadingMsg) loadingMsg.remove();
+                    appendMessage('Connection error. Please try again.', 'start', 'bg-warning text-dark');
+                });
+            }
+
+            sendBtn.addEventListener('click', sendMessage);
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendMessage();
+            });
+
+            function appendMessage(htmlContent, align, cssClass) {
+                const id = 'msg-' + Date.now();
+                const div = document.createElement('div');
+                div.className = `d-flex flex-row justify-content-${align} mb-3`;
+                div.id = id;
+                // Sử dụng innerHTML để render được thẻ ảnh và nút bấm từ Server
+                div.innerHTML = `<div class="p-3 rounded ${cssClass}" style="max-width: 90%; word-wrap: break-word;">${htmlContent}</div>`;
+                messagesArea.appendChild(div);
+                messagesArea.scrollTop = messagesArea.scrollHeight;
+                return id;
+            }
+        });
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

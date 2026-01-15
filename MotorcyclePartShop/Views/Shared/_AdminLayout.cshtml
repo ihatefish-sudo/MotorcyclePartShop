@@ -1,0 +1,108 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+@{
+    // Lấy tên Action và Controller hiện tại để so sánh chính xác hơn
+    string currentAction = ViewContext.RouteData.Values["Action"]?.ToString();
+    string currentController = ViewContext.RouteData.Values["Controller"]?.ToString();
+}
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Admin MotoShop</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
+    <style>
+
+        .sidebar {
+            width: 250px; /* Độ rộng của sidebar */
+            position: fixed; /* QUAN TRỌNG: Giúp sidebar đứng yên */
+            top: 0;
+            left: 0;
+            height: 100vh; /* Chiều cao full màn hình */
+            z-index: 1000; /* Đảm bảo nó nằm trên các thành phần khác */
+            overflow-y: auto; /* Cho phép cuộn riêng sidebar nếu danh sách menu quá dài */
+            background-color: #212529; /* Màu nền tối (bg-dark) */
+            transition: all 0.3s;
+        }
+
+            .sidebar a {
+                color: #adb5bd;
+                text-decoration: none;
+                padding: 10px 15px;
+                display: block;
+                
+            }
+
+                .sidebar a:hover, .sidebar a.active {
+                    background-color: #d70018;
+                    color: white;
+                }
+
+        .admin-content {
+            margin-left: 250px; /* Phải bằng đúng độ rộng của sidebar */
+            width: calc(100% - 250px); /* Tùy chọn: Tính toán độ rộng còn lại */
+            padding: 20px;
+            min-height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <div class="d-flex">
+        <div class="sidebar p-3" style="width: 250px;">
+            <h4 class="text-center text-danger fw-bold">Admin </h4>
+            <h4 class="text-center text-danger fw-bold mb-4">Control Panel</h4>
+            <a href="/Admin/Index" class="@(currentAction == "Index" ? "active" : "")">
+                <i class="fas fa-chart-line me-2"></i> Dashboard
+            </a>
+
+            <a href="/Admin/Products" class="@(currentAction.Contains("Product") ? "active" : "")">
+                <i class="fas fa-box me-2"></i> Products
+            </a>
+
+            <a href="/Admin/Orders" class="@(currentAction.Contains("Order") ? "active" : "")">
+                <i class="fas fa-shopping-bag me-2"></i> Orders
+            </a>
+
+            <a href="/Admin/Promotions" class="@(currentAction.Contains("Promotion") ? "active" : "")">
+                <i class="fas fa-tags me-2"></i> Promotions
+            </a>
+
+            <a href="/Admin/Users" class="@(currentAction.Contains("User") ? "active" : "")">
+                <i class="fas fa-users me-2"></i> Customers
+            </a>
+
+            <a href="/Admin/Categories" class="@(currentAction.Contains("Category") || currentAction.Contains("Categories") ? "active" : "")">
+                <i class="fas fa-list me-2"></i> Categories
+            </a>
+
+            <a href="/Admin/ReturnRequests" class="@(currentAction.Contains("ReturnRequest") ? "active" : "")">
+                <i class="fas fa-undo me-2"></i> Refund request
+            </a>
+            <a href="/Admin/Brands" class="@(currentAction.Contains("Brand") ? "active" : "")">
+                <i class="fas fa-tag me-2"></i> Brands
+            </a>
+            <hr>
+            <hr>
+
+            <a href="/" target="_blank"><i class="fas fa-globe me-2"></i> View Website</a>
+            <a href="/Auth/Logout"><i class="fas fa-sign-out-alt me-2"></i> Logout</a>
+        </div>
+
+        <div class="flex-grow-1 bg-light">
+            <nav class="navbar navbar-light bg-white shadow-sm mb-4 px-4">
+                <span class="navbar-brand mb-0 h1">System Management</span>
+                <span class="text-muted">Hello, Admin</span>
+            </nav>
+            <div class="admin-content container-fluid">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

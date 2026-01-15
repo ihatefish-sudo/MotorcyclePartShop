@@ -1,0 +1,236 @@
+﻿@model IEnumerable<MotorcyclePartShop.Models.Order>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Order Management";
+}
+
+<div class="card shadow-sm border-0 mb-4">
+
+    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fw-bold"> ORDER MANAGEMENT</h5>
+    </div>
+
+    <div class="card-body bg-light border-bottom">
+        <form action="/Admin/Orders" method="get" class="row g-2 align-items-center">
+
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" name="search" class="form-control border-start-0 ps-0"
+                           placeholder="Search Order ID or Customer..." value="@ViewBag.CurrentSearch">
+                </div>
+            </div>
+
+            <div class="col-md-2">
+                <select name="status" class="form-select" onchange="this.form.submit()">
+                    <option value="">-- All Delivery --</option>
+                    <!option value="Pending" @(ViewBag.CurrentStatus == "Pending" ? "selected" : "")>Pending</!option>
+                    <!option value="Shipping" @(ViewBag.CurrentStatus == "Shipping" ? "selected" : "")>Shipping</!option>
+                    <!option value="Completed" @(ViewBag.CurrentStatus == "Completed" ? "selected" : "")>Completed</!option>
+                    <!option value="Returned" @(ViewBag.CurrentStatus == "Returned" ? "selected" : "")>Returned</!option>
+                    <!option value="Cancelled" @(ViewBag.CurrentStatus == "Cancelled" ? "selected" : "")>Cancelled</!option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <select name="payment" class="form-select" onchange="this.form.submit()">
+                    <option value="">-- All Payment --</option>
+                    <!option value="Pending" @(ViewBag.CurrentPayment == "Pending" ? "selected" : "")>Pending</!option>
+                    <!option value="Paid" @(ViewBag.CurrentPayment == "Paid" ? "selected" : "")>Paid</!option>
+                    <!option value="Refunded" @(ViewBag.CurrentPayment == "Refunded" ? "selected" : "")>Refunded</!option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <select name="dateRange" class="form-select" onchange="this.form.submit()">
+                    <option value="">-- All Dates --</option>
+                    <!option value="today" @(ViewBag.CurrentDateRange == "today" ? "selected" : "")>Today</!option>
+                    <!option value="week" @(ViewBag.CurrentDateRange == "week" ? "selected" : "")>Last 7 Days</!option>
+                    <!option value="month" @(ViewBag.CurrentDateRange == "month" ? "selected" : "")>Last 30 Days</!option>
+                </select>
+            </div>
+
+            <div class="col-md-2 d-flex gap-1">
+                <button type="submit" class="btn btn-dark flex-grow-1 fw-bold">Filter</button>
+                <a href="/Admin/Orders" class="btn btn-outline-secondary" title="Reset"><i class="fas fa-undo"></i></a>
+            </div>
+        </form>
+    </div>
+
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light text-secondary">
+                    <tr>
+                        <th class="ps-4">Order Info</th>
+                        <th>Customer</th>
+                        <th>Total Amount</th>
+                        <th>Delivery Status</th>
+                        <th>Payment Status</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold text-danger">#@item.TrackingCode</div>
+                                    <div class="small text-muted"><i class="far fa-clock me-1"></i> @item.OrderDate.ToString("dd/MM/yyyy HH:mm")</div>
+                                </td>
+                                <td>
+                                    @if (item.User != null)
+                                    {
+                                        <div class="fw-bold text-dark">@item.User.FullName</div>
+                                        <div class="small text-muted">@item.User.Phone</div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted fst-italic">Unknown User</span>
+                                    }
+                                </td>
+                                <td class="fw-bold text-dark">@item.TotalAmount.ToString("#,##0")₫</td>
+
+                                <td>
+                                    @if (item.DeliveryStatus == "Pending")
+                                    {
+                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning px-2 py-1">Pending</span>
+                                    }
+                                    else if (item.DeliveryStatus == "Shipping")
+                                    {
+                                        <span class="badge bg-info bg-opacity-10 text-info border border-info px-2 py-1">Shipping</span>
+                                    }
+                                    else if (item.DeliveryStatus == "Completed")
+                                    {
+                                        <span class="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1">Completed</span>
+                                    }
+                                    else if (item.DeliveryStatus == "Returned")
+                                    {
+                                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger px-2 py-1">Returned</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary px-2 py-1">@item.DeliveryStatus</span>
+                                    }
+                                </td>
+
+                                <td>
+                                    @if (item.PaymentStatus == "Paid")
+                                    {
+                                        <span class="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1">Paid</span>
+                                    }
+                                    else if (item.PaymentStatus == "Pending")
+                                    {
+                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning px-2 py-1">Unpaid</span>
+                                    }
+                                    else if (item.PaymentStatus == "Refunded")
+                                    {
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary px-2 py-1">Refunded</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger px-2 py-1">@item.PaymentStatus</span>
+                                    }
+                                </td>
+
+                                <td class="text-end pe-4">
+                                    <a href="/Admin/OrderDetails/@item.OrderId" class="btn btn-sm btn-outline-primary fw-bold shadow-sm">
+                                         Details
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-search fa-3x mb-3 text-secondary opacity-50"></i>
+                <p class="mb-0">No orders found matching your criteria.</p>
+            </div>
+        }
+    </div>
+</div>
+@section Scripts {
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+    <script>
+        // Cấu hình Toastr
+        toastr.options = {
+            "closeButton": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "timeOut": "3000"
+        };
+
+        $(document).ready(function () {
+            // 2. LOGIC HIỂN THỊ THÔNG BÁO TỪ TEMPDATA
+            // Đoạn này sẽ bắt được thông báo "Update successful" từ trang Detail chuyển về
+            var successMsg = '@TempData["Success"]';
+            var errorMsg = '@TempData["Error"]';
+
+            if (successMsg) {
+                toastr.success(successMsg, 'Success');
+            }
+            if (errorMsg) {
+                toastr.error(errorMsg, 'Error');
+            }
+        });
+
+        // 3. Logic mở Modal và Khóa trạng thái (GIỮ NGUYÊN CODE CŨ CỦA BẠN)
+        function openUpdateModal(orderId, deliveryStatus, paymentStatus) {
+            var modal = new bootstrap.Modal(document.getElementById('updateStatusModal'));
+
+            // Set giá trị
+            $('#modalOrderId').val(orderId);
+            $('#modalDeliveryStatus').val(deliveryStatus);
+            $('#modalPaymentStatus').val(paymentStatus);
+
+            // LOGIC KHÓA: Delivery
+            if (deliveryStatus === 'Completed') {
+                $('#modalDeliveryStatus').prop('disabled', true);
+                if($('#hiddenDelivery').length === 0) {
+                    $('<input>').attr({type: 'hidden', id: 'hiddenDelivery', name: 'DeliveryStatus', value: 'Completed'}).appendTo('form');
+                } else {
+                    $('#hiddenDelivery').val('Completed');
+                }
+                $('#deliveryLockMsg').show();
+            } else {
+                $('#modalDeliveryStatus').prop('disabled', false);
+                $('#hiddenDelivery').remove();
+                $('#deliveryLockMsg').hide();
+            }
+
+            // LOGIC KHÓA: Payment
+            if (paymentStatus === 'Paid') {
+                $('#modalPaymentStatus').prop('disabled', true);
+                if($('#hiddenPayment').length === 0) {
+                    $('<input>').attr({type: 'hidden', id: 'hiddenPayment', name: 'PaymentStatus', value: 'Paid'}).appendTo('form');
+                } else {
+                    $('#hiddenPayment').val('Paid');
+                }
+                $('#paymentLockMsg').show();
+            } else {
+                $('#modalPaymentStatus').prop('disabled', false);
+                $('#hiddenPayment').remove();
+                $('#paymentLockMsg').hide();
+            }
+
+            // Khóa nút Save nếu cả 2 đều khóa
+            if (deliveryStatus === 'Completed' && paymentStatus === 'Paid') {
+                $('#btnSaveStatus').prop('disabled', true);
+            } else {
+                $('#btnSaveStatus').prop('disabled', false);
+            }
+
+            modal.show();
+        }
+    </script>
+}

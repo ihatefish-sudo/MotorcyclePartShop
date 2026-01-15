@@ -1,0 +1,156 @@
+﻿@model IEnumerable<MotorcyclePartShop.Models.Promotion>
+@{
+    ViewData["Title"] = "Voucher Warehouse";
+    var userUsageMap = ViewBag.UserUsageMap as Dictionary<int, int> ?? new Dictionary<int, int>();
+    bool isLoggedIn = ViewBag.IsLoggedIn;
+}
+
+<style>
+    .coupon-card {
+        border: 1px solid #e0e0e0;
+        border-radius: 12px;
+        background: #fff;
+        overflow: hidden;
+        transition: 0.3s;
+        position: relative;
+    }
+
+        .coupon-card:hover {
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transform: translateY(-5px);
+        }
+
+    .coupon-head {
+        background: linear-gradient(135deg, #d70018, #ff4d4d);
+        color: white;
+        padding: 20px;
+        text-align: center;
+        position: relative;
+    }
+        /* Răng cưa trang trí */
+        .coupon-head::after {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 10px;
+            background: #fff;
+            clip-path: polygon(0% 0%, 5% 100%, 10% 0%, 15% 100%, 20% 0%, 25% 100%, 30% 0%, 35% 100%, 40% 0%, 45% 100%, 50% 0%, 55% 100%, 60% 0%, 65% 100%, 70% 0%, 75% 100%, 80% 0%, 85% 100%, 90% 0%, 95% 100%, 100% 0%);
+        }
+
+    .coupon-body {
+        padding: 20px;
+    }
+
+    .status-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 0.7rem;
+    }
+</style>
+
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold text-uppercase"><i class=" text-danger me-2"></i> Voucher Collection</h2>
+        <p class="text-muted">Collect coupons and save big on your next order!</p>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="row g-4">
+            @foreach (var item in Model)
+            {
+                int usedCount = userUsageMap.ContainsKey(item.PromotionId) ? userUsageMap[item.PromotionId] : 0;
+                bool isLimitReached = usedCount >= item.UsageLimitPerUser;
+                bool canUse = isLoggedIn && !isLimitReached;
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="coupon-card h-100 @(isLimitReached ? "opacity-75" : "")">
+
+                        <div class="coupon-head">
+                            <h1 class="fw-bold mb-0">@item.DiscountPercent%</h1>
+                            <span class="text-uppercase fw-bold">OFF</span>
+                            @if (isLimitReached)
+                            {
+                                <span class="badge bg-dark status-badge">USED MAX LIMIT</span>
+                            }
+                        </div>
+
+                        <div class="coupon-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="badge bg-light text-dark border px-3 py-2 fs-6">Code: <strong>@item.PromoCode</strong></span>
+
+                                @if (canUse)
+                                {
+                                    <button class="btn btn-sm btn-outline-danger" onclick="copyCode('@item.PromoCode')">
+                                        <i class="far fa-copy"></i> Copy
+                                    </button>
+                                }
+                                else if (!isLoggedIn)
+                                {
+                                    <a href="/Auth/Login" class="btn btn-sm btn-dark">Login to use</a>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-sm btn-secondary" disabled>Max Used</button>
+                                }
+                            </div>
+
+                            <p class="small text-muted mb-2">
+                                <i class="far fa-clock me-1"></i> Valid: @item.StartDate.ToString("dd/MM") - @item.EndDate.ToString("dd/MM/yyyy")
+                            </p>
+
+                            <div class="alert alert-light border small p-2 mb-2">
+                                <strong>Your Usage:</strong> <span class="@(isLimitReached ? "text-danger fw-bold" : "text-success")">@usedCount</span> / @item.UsageLimitPerUser times
+                            </div>
+
+                            <div>
+                                <a class="text-decoration-none text-primary small fw-bold" data-bs-toggle="collapse" href="#prod_@item.PromotionId">
+                                    See applicable products <i class="fas fa-chevron-down"></i>
+                                </a>
+                                <div class="collapse mt-2" id="prod_@item.PromotionId">
+                                    <div class="card card-body p-2 bg-light border-0 small" style="max-height: 100px; overflow-y: auto;">
+                                        @if (item.PromotionProducts.Any())
+                                        {
+                                            <ul class="mb-0 ps-3">
+                                                @foreach (var prod in item.PromotionProducts)
+                                                {
+                                                    <li>@prod.Product.ProductName</li>
+                                                }
+                                            </ul>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-success fw-bold"><i class="fas fa-check"></i> Applies to All Products</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <p class="text-muted">No vouchers available right now.</p>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script>
+        toastr.options = { "positionClass": "toast-top-right" };
+        function copyCode(code) {
+            navigator.clipboard.writeText(code).then(() => {
+                toastr.success('Copied ' + code + ' to clipboard!');
+            });
+        }
+    </script>
+}

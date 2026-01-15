@@ -1,0 +1,125 @@
+﻿@{
+    ViewData["Title"] = "About Us";
+}
+
+<div class="bg-light py-4 mb-5">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-dark">Home</a></li>
+                <li class="breadcrumb-item active text-danger fw-bold" aria-current="page">About Us</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <div class="row align-items-center mb-5">
+        <div class="col-lg-6 mb-4 mb-lg-0">
+            <h2 class="fw-bold text-danger mb-3 text-uppercase">About Moto Shop</h2>
+            <h5 class="fw-bold mb-3">Leading provider of genuine motorcycle parts & accessories.</h5>
+            <p class="text-secondary text-justify">
+                Founded with a passion for motorcycles and a desire to bring the highest quality products to the biker community, <strong>Moto Shop</strong> is proud to be a trusted destination specializing in providing genuine spare parts, motorcycle accessories, and premium lubricants.
+            </p>
+            <p class="text-secondary text-justify">
+                We understand that your bike is not just a means of transportation but a companion. Therefore, every product at Moto Shop is carefully selected from renowned brands such as Honda, Yamaha, Michelin, Motul, RCB... to ensure safety and optimal performance for your beloved ride.
+            </p>
+            <div class="mt-4">
+                <a href="/Product" class="btn btn-danger px-4 py-2 fw-bold shadow-sm">
+                    <i class="fas fa-shopping-cart me-2"></i> Shop Now
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <img src="/images/banners/yamaha-r15-v3-1.jpg"
+                 class="img-fluid rounded shadow"
+                 style="width: 100%; height: 400px; object-fit: cover;"
+                 alt="Moto Shop Store">
+        </div>
+    </div>
+
+    <div class="row mb-5">
+        <div class="col-12 text-center mb-4">
+            <h3 class="fw-bold text-uppercase border-bottom border-danger d-inline-block pb-2">Why Choose Us?</h3>
+            <p class="text-muted mt-2">We are committed to delivering real value to our customers</p>
+        </div>
+
+        <div class="col-md-3 text-center mb-4">
+            <div class="p-4 border rounded h-100 hover-card">
+                <i class="fas fa-certificate text-danger fa-3x mb-3"></i>
+                <h5 class="fw-bold">100% Genuine</h5>
+                <p class="small text-secondary">Guaranteed products with clear origins. We say no to fakes and counterfeits.</p>
+            </div>
+        </div>
+        <div class="col-md-3 text-center mb-4">
+            <div class="p-4 border rounded h-100 hover-card">
+                <i class="fas fa-tags text-danger fa-3x mb-3"></i>
+                <h5 class="fw-bold">Best Prices</h5>
+                <p class="small text-secondary">Always updating competitive prices, accompanied by many attractive promotions.</p>
+            </div>
+        </div>
+        <div class="col-md-3 text-center mb-4">
+            <div class="p-4 border rounded h-100 hover-card">
+                <i class="fas fa-tools text-danger fa-3x mb-3"></i>
+                <h5 class="fw-bold">Diverse Products</h5>
+                <p class="small text-secondary">From standard replacement parts and decorative accessories to high-end lubricants.</p>
+            </div>
+        </div>
+        <div class="col-md-3 text-center mb-4">
+            <div class="p-4 border rounded h-100 hover-card">
+                <i class="fas fa-headset text-danger fa-3x mb-3"></i>
+                <h5 class="fw-bold">24/7 Support</h5>
+                <p class="small text-secondary">Our technical support team is knowledgeable and ready to answer all your questions.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row bg-light rounded p-4 mb-5">
+        <div class="col-md-6">
+            <h4 class="fw-bold text-danger mb-3">Our Products</h4>
+            <ul class="list-unstyled">
+                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> <strong>Replacement Parts:</strong> Sprockets, brake pads, air filters, drive belts...</li>
+                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> <strong>Accessories/Toys:</strong> Forks, brake levers, grips, mirrors...</li>
+                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> <strong>Lubricants & Additives:</strong> Motul, Repsol, Liqui Moly, Shell...</li>
+                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> <strong>Tires:</strong> Michelin, Pirelli, Dunlop, Maxxis...</li>
+            </ul>
+        </div>
+        <div class="col-md-6">
+            <h4 class="fw-bold text-danger mb-3">Contact Information</h4>
+            <ul class="list-unstyled">
+                <li class="mb-2"><i class="fas fa-map-marker-alt text-danger me-2"></i> <strong>Address:</strong> 123 ABC Street, District X, HCMC</li>
+                <li class="mb-2"><i class="fas fa-phone text-danger me-2"></i> <strong>Hotline:</strong> 1900 xxxx</li>
+                <li class="mb-2"><i class="fas fa-envelope text-danger me-2"></i> <strong>Email:</strong> contact@motoshop.com</li>
+                <li class="mb-2"><i class="fas fa-clock text-danger me-2"></i> <strong>Opening Hours:</strong> 8:00 - 20:00 (Daily)</li>
+            </ul>
+        </div>
+    </div>
+
+    @* <div class="row">
+        <div class="col-12">
+            <h4 class="fw-bold mb-3">Store Map</h4>
+            <div class="ratio ratio-21x9 shadow-sm border">
+                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.424167419717!2d106.6987773148007!3d10.77878629231936!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752f38f9ed887b%3A0x14aded5703768966!2sHo%20Chi%20Minh%20City!5e0!3m2!1sen!2s!4v1625631234567!5m2!1sen!2s"
+                        allowfullscreen="" loading="lazy"></iframe>
+            </div>
+        </div>
+    </div> *@
+</div>
+
+<style>
+    /* CSS Hover effects for commitment blocks */
+    .hover-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        background-color: white;
+    }
+
+        .hover-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border-color: #d70018 !important;
+        }
+
+    .text-justify {
+        text-align: justify;
+    }
+</style>

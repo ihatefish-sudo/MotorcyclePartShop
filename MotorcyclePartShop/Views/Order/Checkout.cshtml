@@ -1,0 +1,248 @@
+﻿@model MotorcyclePartShop.Models.CheckoutViewModel
+@{
+    ViewData["Title"] = "Checkout";
+}
+
+<div class="container py-4">
+    <h3 class="text-uppercase fw-bold border-bottom border-danger pb-2 mb-4">
+        <i class="fas fa-check-circle text-danger me-2"></i> Confirm Order
+    </h3>
+
+    <form asp-action="Checkout" method="post" id="checkoutForm">
+        <div class="row">
+            <div class="col-md-7 mb-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-light fw-bold">
+                        <i class="fas fa-map-marker-alt me-2 text-danger"></i> DELIVERY INFORMATION
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Recipient Name <span class="text-danger">*</span></label>
+                            <input asp-for="FullName" class="form-control" placeholder="Enter full name...">
+                            <span asp-validation-for="FullName" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Phone Number <span class="text-danger">*</span></label>
+                            <input asp-for="Phone" class="form-control" placeholder="Enter phone number...">
+                            <span asp-validation-for="Phone" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Province / City <span class="text-danger">*</span></label>
+                            <select asp-for="Province" id="provinceSelect" class="form-select" required>
+                                <option value="">-- Select Province/City --</option>
+                                <option value="Hồ Chí Minh">Ho Chi Minh City</option>
+                                <option value="Hà Nội">Hanoi</option>
+                                <option value="Đà Nẵng">Da Nang</option>
+                                <option value="Bình Dương">Binh Duong</option>
+                                <option value="Đồng Nai">Dong Nai</option>
+                                <option value="Long An">Long An</option>
+                                <option value="Cần Thơ">Can Tho</option>
+                                <option value="Bà Rịa - Vũng Tàu">Ba Ria - Vung Tau</option>
+                                <option value="Khác">Other...</option>
+                            </select>
+                            <span asp-validation-for="Province" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Specific Address (House No, Street...) <span class="text-danger">*</span></label>
+                            <input asp-for="Address" class="form-control" placeholder="Ex: 123 ABC Street, Ward X..." required>
+                            <span asp-validation-for="Address" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Order Note</label>
+                            <textarea asp-for="Note" class="form-control" rows="2" placeholder="Ex: Delivery during office hours..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-5 mb-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-danger text-white fw-bold">
+                        <i class="fas fa-shopping-bag me-2"></i> YOUR ORDER
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush mb-3">
+                            @foreach (var item in Model.CartItems)
+                            {
+                                <li class="list-group-item d-flex justify-content-between px-0">
+                                    <span>@item.Quantity x @item.ProductName</span>
+                                    <span class="fw-bold">@item.Total.ToString("#,##0")₫</span>
+                                </li>
+                            }
+                        </ul>
+
+                        <div class="input-group mb-3">
+                            <input type="text" id="couponInput" name="CouponCode" class="form-control" placeholder="Enter coupon code (if any)">
+                            <button class="btn btn-outline-danger" type="button" id="btnApplyCoupon">Apply</button>
+                        </div>
+                        <div id="couponMessage" class="small mb-2"></div>
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Subtotal</span>
+                            <span class="fw-bold" id="subTotalDisplay" data-value="@Model.TotalAmount">@Model.TotalAmount.ToString("#,##0")₫</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-2 border-bottom pb-3">
+                            <span class="text-success fw-bold" style="font-size: 0.9rem;">Free shipping on orders over 200k.</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-2 border-bottom pb-3">
+                            <span class="text-muted">Shipping Fee</span>
+                            <span class="text-success fw-bold" id="shippingFeeDisplay">---</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-2 text-success" id="discountRow" style="display:none;">
+                            <span>Discount</span>
+                            <span class="fw-bold">-<span id="discountAmountDisplay">0</span></span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-4">
+                            <span class="fs-5 fw-bold text-uppercase">Total</span>
+                            <span class="fs-4 fw-bold text-danger" id="finalTotalDisplay">@Model.TotalAmount.ToString("#,##0")₫</span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Payment Method</label>
+
+                            <div class="form-check p-3 border rounded mb-2 bg-light">
+                                <input class="form-check-input" type="radio" asp-for="PaymentMethod" value="COD" id="paymentCOD" checked>
+                                <label class="form-check-label w-100 fw-bold" for="paymentCOD" style="cursor: pointer;">
+                                    <i class="fas fa-money-bill-wave text-success me-2"></i> Cash on Delivery (COD)
+                                </label>
+                            </div>
+
+                            <div class="form-check p-3 border rounded mb-2 bg-light">
+                                <input class="form-check-input" type="radio" asp-for="PaymentMethod" value="VNPAY" id="paymentVNPAY">
+                                <label class="form-check-label w-100 fw-bold d-flex align-items-center" for="paymentVNPAY" style="cursor: pointer;">
+                                    <img src="/images/logo/vnpay-logo-inkythuatso.svg"
+                                         alt="VNPAY" style="height: 20px; margin-right: 10px;"
+                                         onerror="this.src='https://vnpay.vn/assets/img/logo-primary.svg'"> VNPAY QR / ATM / Visa
+                                </label>
+                                <div id="vnpayInfo" class="text-muted small ms-4 mt-1" style="display:none;">
+                                    You will be redirected to VNPAY gateway to complete payment securely.
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <button type="submit" class="btn btn-danger w-100 py-3 fw-bold fs-5 text-uppercase">
+                            PLACE ORDER
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function() {
+            // Global variables for calculation
+            var subTotal = parseFloat($('#subTotalDisplay').data('value'));
+            var shippingFee = 0;
+            var discountAmount = 0;
+
+            // Currency formatter
+            function formatMoney(amount) {
+                return amount.toLocaleString('vi-VN') + '₫';
+            }
+
+            // Calculate final total
+            function updateFinalTotal() {
+                var final = subTotal + shippingFee - discountAmount;
+                if(final < 0) final = 0;
+                $('#finalTotalDisplay').text(formatMoney(final));
+            }
+
+            // 1. HANDLE PROVINCE SELECTION -> CALCULATE SHIP (AJAX)
+            $('#provinceSelect').change(function() {
+                var province = $(this).val();
+
+                $.ajax({
+                    url: '/Order/GetShippingFee',
+                    type: 'POST',
+                    data: { province: province, totalCartValue: subTotal },
+                    success: function(res) {
+                        shippingFee = res.fee;
+
+                        if(res.fee === 0) {
+                            $('#shippingFeeDisplay').html('<span class="badge bg-success">Free</span>');
+                        } else {
+                            $('#shippingFeeDisplay').text(formatMoney(res.fee));
+                        }
+                        updateFinalTotal();
+                    },
+                    error: function() {
+                        console.log("Error calculating shipping fee");
+                    }
+                });
+            });
+
+            // 2. HANDLE COUPON CODE (AJAX)
+            $('#btnApplyCoupon').click(function() {
+                var code = $('#couponInput').val();
+                if(!code) {
+                    alert("Please enter a coupon code!");
+                    return;
+                }
+
+                $.ajax({
+                    url: '/Order/CheckCoupon',
+                    type: 'POST',
+                    data: { code: code },
+                    success: function(res) {
+                        if(res.success) {
+                            $('#couponMessage').html('<span class="text-success fw-bold"><i class="fas fa-check"></i> ' + res.message + '</span>');
+
+                            // If FreeShip Coupon
+                            if(res.isFreeShip) {
+                                shippingFee = 0;
+                                $('#shippingFeeDisplay').html('<span class="badge bg-success">Free (Coupon)</span>');
+                            }
+
+                            // Update discount amount
+                            discountAmount = res.discount;
+
+                            if(discountAmount > 0) {
+                                $('#discountRow').show();
+                                $('#discountAmountDisplay').text(formatMoney(discountAmount));
+                            } else {
+                                $('#discountRow').hide();
+                            }
+
+                            updateFinalTotal();
+                        } else {
+                            $('#couponMessage').html('<span class="text-danger"><i class="fas fa-times"></i> ' + res.message + '</span>');
+                            // Reset discount if code is invalid
+                            discountAmount = 0;
+                            $('#discountRow').hide();
+                            updateFinalTotal();
+                        }
+                    },
+                    error: function() {
+                        alert("An error occurred while checking the coupon!");
+                    }
+                });
+            });
+
+            // 3. HANDLE PAYMENT METHOD TOGGLE (Đã cập nhật: Xóa logic Bank)
+            $('input[name="PaymentMethod"]').change(function() {
+                // Ẩn thông tin VNPAY trước
+                $('#vnpayInfo').hide();
+
+                if ($('#paymentVNPAY').is(':checked')) {
+                    $('#vnpayInfo').show();
+                }
+            });
+
+            // Trigger shipping calculation on load (if user selected province or total > threshold)
+            $('#provinceSelect').trigger('change');
+        });
+    </script>
+}

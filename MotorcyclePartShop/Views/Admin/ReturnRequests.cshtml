@@ -1,0 +1,227 @@
+﻿@model IEnumerable<MotorcyclePartShop.Models.ReturnRequest>
+
+@{
+    ViewData["Title"] = "Manage Return Requests";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fw-bold"> RETURN REQUESTS</h5>
+    </div>
+
+    <div class="card-body bg-light border-bottom">
+        <form action="/Admin/ReturnRequests" method="get" class="row g-2 align-items-center justify-content-end">
+            <div class="col-auto">
+                <label class="fw-bold text-secondary me-2">Filter by Status:</label>
+
+            </div>
+            <div class="col-auto" style="min-width: 200px;">
+                <select name="status" class="form-select" onchange="this.form.submit()">
+                    <option value="">-- All Requests --</option>
+                    <!option value="Pending" @(ViewBag.CurrentStatus == "Pending" ? "selected" : "")>Pending (Waiting)</!option>
+                    <!option value="Approved" @(ViewBag.CurrentStatus == "Approved" ? "selected" : "")>Approved</!option>
+                    <!option value="Rejected" @(ViewBag.CurrentStatus == "Rejected" ? "selected" : "")>Rejected</!option>
+                </select>
+
+            </div>
+        </form>
+    </div>
+
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light text-secondary">
+                    <tr>
+                        <th class="ps-4">ID</th>
+                        <th>Order</th>
+                        <th>Customer</th>
+                        <th>Reason</th>
+                        <th>Evidence</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="ps-4 fw-bold">#@item.ReturnId</td>
+                            <td>
+                                <a href="/Admin/OrderDetails/@item.OrderId" class="text-decoration-none fw-bold" target="_blank">
+                                    #@item.Order.TrackingCode <i class="fas fa-external-link-alt small ms-1"></i>
+                                </a>
+                            </td>
+                            <td>
+                                <div class="d-flex flex-column">
+                                    <span class="fw-bold">@item.Order.User?.FullName</span>
+                                    <small class="text-muted">@item.Order.User?.Phone</small>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border mb-1">@item.Reason</span>
+                                <br>
+                                <small class="text-muted" style="max-width: 200px; display: inline-block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="@item.Note">
+                                    @item.Note
+                                </small>
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(item.ImageEvidence))
+                                {
+                                    <img src="~/images/returns/@item.ImageEvidence"
+                                         class="rounded border shadow-sm"
+                                         style="width: 50px; height: 50px; object-fit: cover; cursor: pointer;"
+                                         onclick="showImage('@item.ImageEvidence')"
+                                         data-bs-toggle="modal" data-bs-target="#imageModal" />
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">No Image</span>
+                                }
+                            </td>
+                            <td>@item.RequestedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>
+                                @if (item.Status == "Pending")
+                                {
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                }
+                                else if (item.Status == "Approved")
+                                {
+                                    <span class="badge bg-success">Approved</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Rejected</span>
+                                }
+                            </td>
+                            <td class="text-end pe-4">
+                                <a href="/Admin/ReturnRequestDetails/@item.ReturnId" class="btn btn-sm btn-outline-primary me-1 fw-bold" title="View Details">
+                                    Details
+                                </a>
+
+                                @if (item.Status == "Pending")
+                                {
+                                    <button class="btn btn-sm btn-success me-1" onclick="openProcessModal(@item.ReturnId, 'Approve')" title="Approve">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="openProcessModal(@item.ReturnId, 'Reject')" title="Reject">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small ms-1">Processed</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-inbox fa-3x mb-3"></i>
+                <p>No return requests found.</p>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-transparent border-0">
+            <div class="modal-body p-0 text-center position-relative">
+                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal"></button>
+                <img id="fullImage" src="" class="img-fluid rounded shadow-lg" style="max-height: 80vh;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="processModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="/Admin/ProcessReturn" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="processTitle">Process Request</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="ReturnId" id="processReturnId">
+                    <input type="hidden" name="Status" id="processStatusInput">
+
+                    <div class="alert" id="processAlert"></div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Admin Note (Optional)</label>
+                        <textarea name="AdminNote" class="form-control" rows="3" placeholder="Enter reason or note for customer..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn fw-bold" id="processSubmitBtn">Confirm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+    <script>
+        // Cấu hình Toastr
+        toastr.options = {
+            "closeButton": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "timeOut": "5000"
+        };
+
+        $(document).ready(function () {
+            var successMsg = '@TempData["Success"]';
+            var errorMsg = '@TempData["Error"]';
+
+            if (successMsg) toastr.success(successMsg, 'Success');
+            if (errorMsg) toastr.error(errorMsg, 'Error');
+        });
+
+        function showImage(filename) {
+            document.getElementById('fullImage').src = '/images/returns/' + filename;
+        }
+
+        function openProcessModal(id, action) {
+            var modal = new bootstrap.Modal(document.getElementById('processModal'));
+            document.getElementById('processReturnId').value = id;
+
+            var title = document.getElementById('processTitle');
+            var alert = document.getElementById('processAlert');
+            var statusInput = document.getElementById('processStatusInput');
+            var btn = document.getElementById('processSubmitBtn');
+
+            if (action === 'Approve') {
+                title.innerText = "Approve Return Request";
+                title.className = "modal-title fw-bold text-success";
+                alert.className = "alert alert-success";
+                alert.innerHTML = "<i class='fas fa-check-circle me-1'></i> Are you sure you want to <strong>APPROVE</strong> this request?";
+                statusInput.value = "Approved";
+                btn.className = "btn btn-success fw-bold";
+                btn.innerText = "Yes, Approve";
+            } else {
+                title.innerText = "Reject Return Request";
+                title.className = "modal-title fw-bold text-danger";
+                alert.className = "alert alert-danger";
+                alert.innerHTML = "<i class='fas fa-exclamation-triangle me-1'></i> Are you sure you want to <strong>REJECT</strong> this request?";
+                statusInput.value = "Rejected";
+                btn.className = "btn btn-danger fw-bold";
+                btn.innerText = "Yes, Reject";
+            }
+
+            modal.show();
+        }
+    </script>
+}

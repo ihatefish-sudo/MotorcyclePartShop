@@ -1,0 +1,84 @@
+﻿@model MotorcyclePartShop.Models.Promotion
+@{
+    ViewData["Title"] = "Create New Promotion";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0 fw-bold"><i class="fas fa-plus me-2"></i> Create New Promotion</h5>
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="CreatePromotion" method="post">
+
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3"></div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Promo Code</label>
+                            <input asp-for="PromoCode" class="form-control text-uppercase fw-bold" placeholder="Ex: SALE10" required />
+                            <span asp-validation-for="PromoCode" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Discount Percentage (%)</label>
+                            <input asp-for="DiscountPercent" type="number" min="1" max="100" class="form-control" placeholder="Ex: 10" required />
+                            <span asp-validation-for="DiscountPercent" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Start Date</label>
+                            <input asp-for="StartDate" type="date" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+                            <span asp-validation-for="StartDate" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">End Date</label>
+                            <input asp-for="EndDate" type="date" class="form-control" required />
+                            <span asp-validation-for="EndDate" class="text-danger small"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Usage Limit Per User</label>
+                        <input asp-for="UsageLimitPerUser" type="number" min="1" class="form-control" value="1" required />
+                        <span class="text-muted small">Example: Enter 1 if a customer can only use this code once.</span>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" asp-for="IsActive" checked id="activeSwitch" style="cursor: pointer;">
+                        <label class="form-check-label fw-bold text-success" for="activeSwitch" id="activeLabel">
+                            Activate Immediately
+                        </label>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                        <a href="/Admin/Promotions" class="btn btn-secondary px-4">Cancel</a>
+                        <button type="submit" class="btn btn-danger px-4 fw-bold">
+                            <i class="fas fa-save me-2"></i> Save Promotion
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Script to toggle label color/text
+        document.getElementById('activeSwitch').addEventListener('change', function() {
+            const label = document.getElementById('activeLabel');
+            if(this.checked) {
+                label.textContent = "Activate Immediately";
+                label.className = "form-check-label fw-bold text-success";
+            } else {
+                label.textContent = "Inactive (Draft)";
+                label.className = "form-check-label fw-bold text-secondary";
+            }
+        });
+    </script>
+}
