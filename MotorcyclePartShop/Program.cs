@@ -12,8 +12,7 @@ builder.Services.AddTransient<IEmailSender, EmailSender>();
 builder.Services.AddHostedService<MotorcyclePartShop.Services.AutoCancelUnpaidOrdersService>();
 // ??ng ký DbContext ?úng tên (MotorcyclePartShopDbContext)
 builder.Services.AddDbContext<MotorcyclePartShopDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 // Thêm Session (dùng cho gi? hàng)
 builder.Services.AddSession(options =>
 {
