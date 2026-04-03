@@ -137,14 +137,19 @@ namespace MotorcyclePartShop.Controllers
         {
             if (string.IsNullOrEmpty(query)) return Json(new List<object>());
 
+            // 1. Chuyển từ khóa tìm kiếm về chữ thường
+            string kw = query.ToLower().Trim();
+
             var products = await _context.Products
                 .Include(p => p.Category)
                 .Where(p => p.IsActive
-                            && p.ProductName.Contains(query)
+                            // 2. Thêm ToLower() cho ProductName
+                            && p.ProductName.ToLower().Contains(kw)
                             && p.Category != null
-                            && (p.Category.CategoryName.Contains("Motorcycle") ||
-                                p.Category.CategoryName.Contains("Xe máy") ||
-                                p.Category.CategoryName.Contains("Scooter")))
+                            // 3. Thêm ToLower() cho CategoryName luôn để an toàn tuyệt đối
+                            && (p.Category.CategoryName.ToLower().Contains("motorcycle") ||
+                                p.Category.CategoryName.ToLower().Contains("xe máy") ||
+                                p.Category.CategoryName.ToLower().Contains("scooter")))
                 .Select(p => new {
                     id = p.ProductId,
                     name = p.ProductName,
