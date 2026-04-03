@@ -24,12 +24,15 @@ namespace MotorcyclePartShop.Controllers
             var order = await _context.Orders.FindAsync(orderId);
             if (order == null) return NotFound();
 
-            var vnPayModel = _configuration.GetSection("VnPay");
+            var vnPayModel = _configuration.GetSection("Vnpay");
 
             string vnp_TmnCode = vnPayModel["TmnCode"];
             string vnp_HashSecret = vnPayModel["HashSecret"];
             string vnp_Url = vnPayModel["BaseUrl"];
-            string vnp_ReturnUrl = Url.Action("PaymentCallback", "Payment", null, Request.Scheme);
+
+            // [FIXED] Lấy URL trả về từ file cấu hình (hoặc biến môi trường trên Render)
+            // Thay vì dùng Url.Action() dễ bị load balancer của Render ép về http://
+            string vnp_ReturnUrl = vnPayModel["PaymentBackReturnUrl"];
 
             VnPayLibrary vnpay = new VnPayLibrary();
 
@@ -40,14 +43,14 @@ namespace MotorcyclePartShop.Controllers
             long amount = (long)(order.TotalAmount * 100);
             vnpay.AddRequestData("vnp_Amount", amount.ToString());
 
-            // [FIXED] VNPAY bắt buộc dùng giờ Việt Nam (GMT+7). 
+            // VNPAY bắt buộc dùng giờ Việt Nam (GMT+7). 
             // Dùng UtcNow.AddHours(7) để luôn lấy đúng giờ VN bất kể server cloud đặt ở đâu.
             string createDateVnTime = DateTime.UtcNow.AddHours(7).ToString("yyyyMMddHHmmss");
             vnpay.AddRequestData("vnp_CreateDate", createDateVnTime);
 
-            vnpay.AddRequestData("vnp_CurrCode", "VND");
+            vnpay.AddRequestData("vnp_CurrCode", vnPayModel["CurrCode"]);
             vnpay.AddRequestData("vnp_IpAddr", HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1");
-            vnpay.AddRequestData("vnp_Locale", "vn");
+            vnpay.AddRequestData("vnp_Locale", vnPayModel["Locale"]);
 
             vnpay.AddRequestData("vnp_OrderInfo", "Thanh toan don hang #" + order.OrderId);
             vnpay.AddRequestData("vnp_OrderType", "other");
@@ -64,7 +67,7 @@ namespace MotorcyclePartShop.Controllers
         // 2. XỬ LÝ KẾT QUẢ TRẢ VỀ (CALLBACK)
         public async Task<IActionResult> PaymentCallback()
         {
-            var response = _configuration.GetSection("VnPay");
+            var response = _configuration.GetSection("Vnpay");
             string vnp_HashSecret = response["HashSecret"];
 
             var vnpayData = Request.Query;
@@ -101,7 +104,7 @@ namespace MotorcyclePartShop.Controllers
                         {
                             OrderId = order.OrderId,
                             Status = "Payment Successful via VNPAY",
-                            // [FIXED] Dùng UtcNow thay vì Now để chuẩn hóa với Postgres
+                            // Dùng UtcNow thay vì Now để chuẩn hóa với Postgres
                             UpdatedAt = DateTime.UtcNow
                         });
 
