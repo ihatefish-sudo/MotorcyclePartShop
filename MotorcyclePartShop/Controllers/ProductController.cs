@@ -31,9 +31,9 @@ namespace MotorcyclePartShop.Controllers
             {
                 string kw = search.ToLower().Trim();
                 products = products.Where(p =>
-                    p.ProductName.Contains(kw) ||
-                    p.Description.Contains(kw) ||
-                    p.Brand.BrandName.Contains(kw)
+                    p.ProductName.ToLower().Contains(kw) ||
+                    p.Description.ToLower().Contains(kw) ||
+                    p.Brand.BrandName.ToLower().Contains(kw)
                 );
                 ViewBag.SearchKeyword = search;
             }
@@ -56,7 +56,7 @@ namespace MotorcyclePartShop.Controllers
             string kw = query.ToLower().Trim();
 
             var suggestions = await _context.Products
-                .Where(p => p.IsActive && p.ProductName.Contains(kw))
+                .Where(p => p.IsActive && p.ProductName.ToLower().Contains(kw))
                 .OrderByDescending(p => p.CreatedAt)
                 .Take(5)
                 .Select(p => new {
