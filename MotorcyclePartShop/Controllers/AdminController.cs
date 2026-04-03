@@ -2,10 +2,9 @@
 using Microsoft.EntityFrameworkCore;
 using MotorcyclePartShop.Data;
 using MotorcyclePartShop.Models;
-using Microsoft.AspNetCore.Http; 
-using Microsoft.Data.SqlClient;
+using Microsoft.AspNetCore.Http;
 using MotorcyclePartShop.Utilities;
-using System.IO; 
+using System.IO;
 
 namespace MotorcyclePartShop.Controllers
 {
@@ -31,7 +30,6 @@ namespace MotorcyclePartShop.Controllers
         // ==========================================
         public async Task<IActionResult> Index()
         {
-            // [FIXED] Security Check
             if (!IsAdmin()) return RedirectToAction("Login", "Auth");
 
             // 1. Thống kê tổng quan
@@ -72,7 +70,6 @@ namespace MotorcyclePartShop.Controllers
             decimal[] monthlyRevenue = new decimal[12];
             foreach (var item in revenueData)
             {
-                // [FIXED] Safety check to prevent crash if Month is invalid
                 if (item.Month >= 1 && item.Month <= 12)
                 {
                     monthlyRevenue[item.Month - 1] = item.Revenue;
@@ -108,24 +105,23 @@ namespace MotorcyclePartShop.Controllers
             ViewBag.TopProducts = topProducts;
 
             var bottomProducts = await _context.OrderItems
-        .Include(oi => oi.Product)
-        .GroupBy(oi => new { oi.ProductId, oi.Product.ProductName, oi.Product.MainImage, oi.Product.Price })
-        .Select(g => new
-        {
-            Name = g.Key.ProductName,
-            Image = g.Key.MainImage,
-            Price = g.Key.Price,
-            TotalSold = g.Sum(oi => oi.Quantity),
-            TotalRevenue = g.Sum(oi => oi.Quantity * oi.Price)
-        })
-        .OrderBy(x => x.TotalSold) // Sắp xếp tăng dần (Ít nhất lên đầu)
-        .Take(5)
-        .ToListAsync();
+                .Include(oi => oi.Product)
+                .GroupBy(oi => new { oi.ProductId, oi.Product.ProductName, oi.Product.MainImage, oi.Product.Price })
+                .Select(g => new
+                {
+                    Name = g.Key.ProductName,
+                    Image = g.Key.MainImage,
+                    Price = g.Key.Price,
+                    TotalSold = g.Sum(oi => oi.Quantity),
+                    TotalRevenue = g.Sum(oi => oi.Quantity * oi.Price)
+                })
+                .OrderBy(x => x.TotalSold)
+                .Take(5)
+                .ToListAsync();
 
             ViewBag.BottomProducts = bottomProducts;
 
             return View();
-         
         }
 
         // ==========================================
@@ -182,12 +178,9 @@ namespace MotorcyclePartShop.Controllers
         {
             if (!IsAdmin()) return RedirectToAction("Login", "Auth");
 
-            // --- BỔ SUNG CÁC DÒNG NÀY ---
-            // Bỏ qua kiểm tra object liên kết (Navigation properties)
-            ModelState.Remove("MainImage"); // Đã có từ trước
-            ModelState.Remove("Category");  // <--- Thêm dòng này
-            ModelState.Remove("Brand");     // <--- Thêm dòng này
-            // ----------------------------
+            ModelState.Remove("MainImage");
+            ModelState.Remove("Category");
+            ModelState.Remove("Brand");
 
             if (ModelState.IsValid)
             {
@@ -213,11 +206,10 @@ namespace MotorcyclePartShop.Controllers
                 model.CreatedAt = DateTime.Now;
                 _context.Products.Add(model);
                 await _context.SaveChangesAsync();
-                TempData["Success"] = "Thêm sản phẩm thành công!"; // Thêm thông báo
+                TempData["Success"] = "Thêm sản phẩm thành công!";
                 return RedirectToAction("Products");
             }
 
-            // Nếu vẫn lỗi thì load lại danh sách để hiện form
             ViewBag.Categories = _context.Categories.ToList();
             ViewBag.Brands = _context.Brands.ToList();
             return View(model);
@@ -281,7 +273,6 @@ namespace MotorcyclePartShop.Controllers
                         string folder = Path.Combine(_webHostEnvironment.WebRootPath, "images/products");
                         if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
 
-                        // [FIXED] Delete old image
                         if (!string.IsNullOrEmpty(existingProduct.MainImage))
                         {
                             string oldPath = Path.Combine(folder, existingProduct.MainImage);
@@ -338,7 +329,6 @@ namespace MotorcyclePartShop.Controllers
             var product = await _context.Products.FindAsync(id);
             if (product != null)
             {
-                // Soft delete
                 product.IsActive = false;
                 await _context.SaveChangesAsync();
             }
@@ -405,7 +395,6 @@ namespace MotorcyclePartShop.Controllers
                 return RedirectToAction("Orders");
             }
 
-            // Server-side Validation: Chặn nếu cố tình hack HTML để sửa
             if (order.DeliveryStatus == "Completed" && DeliveryStatus != "Completed")
             {
                 TempData["Error"] = "Cannot change delivery status once Completed!";
@@ -418,12 +407,10 @@ namespace MotorcyclePartShop.Controllers
                 return RedirectToAction("Orders");
             }
 
-            // Cập nhật
             bool isChanged = false;
             if (order.DeliveryStatus != DeliveryStatus)
             {
                 order.DeliveryStatus = DeliveryStatus;
-                // Logic thêm OrderTracking nếu cần
                 isChanged = true;
             }
 
@@ -490,13 +477,10 @@ namespace MotorcyclePartShop.Controllers
             return View(await query.ToListAsync());
         }
 
-
-        // [GET] Create Promotion
-        public async Task<IActionResult> CreatePromotion() // Changed to async to await list
+        public async Task<IActionResult> CreatePromotion()
         {
             if (!IsAdmin()) return RedirectToAction("Login", "Auth");
 
-            // Load products for selection in the view
             ViewBag.AllProducts = await _context.Products
                 .Where(p => p.IsActive)
                 .Select(p => new { p.ProductId, p.ProductName })
@@ -505,16 +489,13 @@ namespace MotorcyclePartShop.Controllers
             return View();
         }
 
-        // [POST] Create Promotion
         [HttpPost]
         public async Task<IActionResult> CreatePromotion(Promotion model, List<int> selectedProducts)
         {
             if (!IsAdmin()) return RedirectToAction("Login", "Auth");
 
-            // 1. Remove validation for the navigation property
             ModelState.Remove("PromotionProducts");
 
-            // 2. Custom Validation Logic
             if (await _context.Promotions.AnyAsync(p => p.PromoCode == model.PromoCode))
                 ModelState.AddModelError("PromoCode", "This Promo Code already exists!");
 
@@ -523,12 +504,10 @@ namespace MotorcyclePartShop.Controllers
 
             if (ModelState.IsValid)
             {
-                // 3. Save Promotion
                 model.PromoCode = model.PromoCode.ToUpper();
                 _context.Promotions.Add(model);
-                await _context.SaveChangesAsync(); // Save first to generate PromotionId
+                await _context.SaveChangesAsync();
 
-                // 4. Save Selected Products (if any)
                 if (selectedProducts != null && selectedProducts.Any())
                 {
                     foreach (var productId in selectedProducts)
@@ -546,7 +525,6 @@ namespace MotorcyclePartShop.Controllers
                 return RedirectToAction("Promotions");
             }
 
-            // 5. Repopulate ViewBag if validation fails
             ViewBag.AllProducts = await _context.Products
                 .Where(p => p.IsActive)
                 .Select(p => new { p.ProductId, p.ProductName })
@@ -825,40 +803,44 @@ namespace MotorcyclePartShop.Controllers
 
             if (ModelState.IsValid)
             {
-                // Call Stored Procedure
-                var pId = new SqlParameter("@CategoryId", model.CategoryId);
-                var pName = new SqlParameter("@CategoryName", model.CategoryName);
-                var pActive = new SqlParameter("@IsActive", model.IsActive);
+                var existingCategory = await _context.Categories.FindAsync(model.CategoryId);
+                if (existingCategory != null)
+                {
+                    existingCategory.CategoryName = model.CategoryName;
+                    existingCategory.IsActive = model.IsActive;
 
-                await _context.Database.ExecuteSqlRawAsync("EXEC sp_UpdateCategory @CategoryId, @CategoryName, @IsActive", pId, pName, pActive);
+                    _context.Categories.Update(existingCategory);
+                    await _context.SaveChangesAsync();
 
-                TempData["Success"] = "Category updated successfully!";
-                return RedirectToAction(nameof(Categories));
+                    TempData["Success"] = "Category updated successfully!";
+                    return RedirectToAction(nameof(Categories));
+                }
+                else
+                {
+                    TempData["Error"] = "Category not found!";
+                }
             }
             return View(model);
         }
-        // ==========================================
-        // 6. QUẢN LÝ YÊU CẦU TRẢ HÀNG (RETURN REQUESTS)
-        // ==========================================
 
-        // [GET] Danh sách yêu cầu
+        // ==========================================
+        // 7. RETURN REQUESTS
+        // ==========================================
         public async Task<IActionResult> ReturnRequests(string status)
         {
             if (!IsAdmin()) return RedirectToAction("Login", "Auth");
 
             var query = _context.ReturnRequests
                 .Include(r => r.Order)
-                .ThenInclude(o => o.User) // Để hiển thị tên khách hàng
+                .ThenInclude(o => o.User)
                 .AsQueryable();
 
-            // Lọc theo trạng thái
             if (!string.IsNullOrEmpty(status))
             {
                 query = query.Where(r => r.Status == status);
             }
             else
             {
-                // Mặc định ưu tiên hiện 'Pending' lên đầu
                 query = query.OrderByDescending(r => r.Status == "Pending").ThenByDescending(r => r.RequestedAt);
             }
 
@@ -866,7 +848,6 @@ namespace MotorcyclePartShop.Controllers
             return View(await query.ToListAsync());
         }
 
-        // [POST] Xử lý Duyệt / Từ chối
         [HttpPost]
         public async Task<IActionResult> ProcessReturn(int ReturnId, string Status, string AdminNote)
         {
@@ -874,167 +855,173 @@ namespace MotorcyclePartShop.Controllers
 
             try
             {
-                var pReturnId = new SqlParameter("@ReturnId", ReturnId);
-                var pStatus = new SqlParameter("@Status", Status);
-                var pNote = new SqlParameter("@AdminNote", AdminNote ?? "");
+                var request = await _context.ReturnRequests.FindAsync(ReturnId);
 
-                // Gọi Stored Procedure
-                await _context.Database.ExecuteSqlRawAsync(
-                    "EXEC sp_ProcessReturnRequest @ReturnId, @Status, @AdminNote",
-                    pReturnId, pStatus, pNote
-                );
+                if (request != null)
+                {
+                    request.Status = Status;
+                    request.AdminNote = AdminNote ?? "";
 
-                // --- SỬA THÀNH TIẾNG ANH Ở ĐÂY ---
-                string statusText = Status == "Approved" ? "approved" : "rejected";
-                TempData["Success"] = $"Return request has been {statusText} successfully!";
+                    if (Status == "Approved" || Status == "Rejected")
+                    {
+                        request.ResolvedAt = DateTime.Now;
+                    }
+
+                    if (Status == "Approved")
+                    {
+                        var order = await _context.Orders.FindAsync(request.OrderId);
+                        if (order != null)
+                        {
+                            order.DeliveryStatus = "Returned";
+                        }
+                    }
+
+                    await _context.SaveChangesAsync();
+
+                    string statusText = Status == "Approved" ? "approved" : "rejected";
+                    TempData["Success"] = $"Return request has been {statusText} successfully!";
+                }
+                else
+                {
+                    TempData["Error"] = "Return request not found!";
+                }
             }
             catch (Exception ex)
             {
-                // --- SỬA THÀNH TIẾNG ANH Ở ĐÂY ---
                 TempData["Error"] = "Error processing request: " + ex.Message;
             }
 
             return RedirectToAction("ReturnRequests");
         }
-        // [GET] Xem chi tiết yêu cầu trả hàng
+
         public async Task<IActionResult> ReturnRequestDetails(int id)
         {
             if (!IsAdmin()) return RedirectToAction("Login", "Auth");
 
             var request = await _context.ReturnRequests
-                .Include(r => r.Order).ThenInclude(o => o.Items).ThenInclude(i => i.Product) // Load sản phẩm trong đơn
-                .Include(r => r.Order).ThenInclude(o => o.User) // Load thông tin khách hàng
+                .Include(r => r.Order).ThenInclude(o => o.Items).ThenInclude(i => i.Product)
+                .Include(r => r.Order).ThenInclude(o => o.User)
                 .FirstOrDefaultAsync(r => r.ReturnId == id);
 
             if (request == null) return NotFound();
 
             return View(request);
         }
+
         // ==========================================
-// 7. BRAND MANAGEMENT (QUẢN LÝ THƯƠNG HIỆU)
-// ==========================================
-
-// [GET] Danh sách Brands
-public async Task<IActionResult> Brands(string search, string status)
-{
-    if (!IsAdmin()) return RedirectToAction("Login", "Auth");
-
-    var query = _context.Brands.AsQueryable();
-
-    if (!string.IsNullOrEmpty(search))
-    {
-        query = query.Where(b => b.BrandName.Contains(search));
-    }
-
-    if (!string.IsNullOrEmpty(status))
-    {
-        bool isActive = status == "active";
-        query = query.Where(b => b.IsActive == isActive);
-    }
-
-    ViewBag.CurrentSearch = search;
-    ViewBag.CurrentStatus = status;
-
-    // Sắp xếp mới nhất lên đầu
-    return View(await query.OrderByDescending(b => b.BrandId).ToListAsync());
-}
-
-// [GET] Tạo Brand
-public IActionResult CreateBrand()
-{
-    if (!IsAdmin()) return RedirectToAction("Login", "Auth");
-    return View();
-}
-
-// [POST] Lưu Brand mới
-[HttpPost]
-public async Task<IActionResult> CreateBrand(Brand model)
-{
-    if (!IsAdmin()) return RedirectToAction("Login", "Auth");
-
-    // Loại bỏ check validation cho Products (List)
-    ModelState.Remove("Products");
-
-    if (await _context.Brands.AnyAsync(b => b.BrandName == model.BrandName))
-    {
-        ModelState.AddModelError("BrandName", "Brand name already exists!");
-    }
-
-    if (ModelState.IsValid)
-    {
-        model.CreatedAt = DateTime.Now;
-        _context.Brands.Add(model);
-        await _context.SaveChangesAsync();
-        TempData["Success"] = "Brand created successfully!";
-        return RedirectToAction(nameof(Brands));
-    }
-    return View(model);
-}
-
-// [GET] Sửa Brand
-public async Task<IActionResult> EditBrand(int id)
-{
-    if (!IsAdmin()) return RedirectToAction("Login", "Auth");
-    var brand = await _context.Brands.FindAsync(id);
-    if (brand == null) return NotFound();
-    return View(brand);
-}
-
-// [POST] Lưu sửa Brand
-[HttpPost]
-public async Task<IActionResult> EditBrand(Brand model)
-{
-    if (!IsAdmin()) return RedirectToAction("Login", "Auth");
-
-    ModelState.Remove("Products");
-
-    if (await _context.Brands.AnyAsync(b => b.BrandName == model.BrandName && b.BrandId != model.BrandId))
-    {
-        ModelState.AddModelError("BrandName", "Brand name already exists!");
-    }
-
-    if (ModelState.IsValid)
-    {
-        var existingBrand = await _context.Brands.FindAsync(model.BrandId);
-        if (existingBrand != null)
+        // 8. BRAND MANAGEMENT
+        // ==========================================
+        public async Task<IActionResult> Brands(string search, string status)
         {
-            existingBrand.BrandName = model.BrandName;
-            existingBrand.Description = model.Description;
-            existingBrand.IsActive = model.IsActive;
-            // Không cập nhật CreatedAt
-            
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Brand updated successfully!";
+            if (!IsAdmin()) return RedirectToAction("Login", "Auth");
+
+            var query = _context.Brands.AsQueryable();
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(b => b.BrandName.Contains(search));
+            }
+
+            if (!string.IsNullOrEmpty(status))
+            {
+                bool isActive = status == "active";
+                query = query.Where(b => b.IsActive == isActive);
+            }
+
+            ViewBag.CurrentSearch = search;
+            ViewBag.CurrentStatus = status;
+
+            return View(await query.OrderByDescending(b => b.BrandId).ToListAsync());
+        }
+
+        public IActionResult CreateBrand()
+        {
+            if (!IsAdmin()) return RedirectToAction("Login", "Auth");
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateBrand(Brand model)
+        {
+            if (!IsAdmin()) return RedirectToAction("Login", "Auth");
+
+            ModelState.Remove("Products");
+
+            if (await _context.Brands.AnyAsync(b => b.BrandName == model.BrandName))
+            {
+                ModelState.AddModelError("BrandName", "Brand name already exists!");
+            }
+
+            if (ModelState.IsValid)
+            {
+                model.CreatedAt = DateTime.Now;
+                _context.Brands.Add(model);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Brand created successfully!";
+                return RedirectToAction(nameof(Brands));
+            }
+            return View(model);
+        }
+
+        public async Task<IActionResult> EditBrand(int id)
+        {
+            if (!IsAdmin()) return RedirectToAction("Login", "Auth");
+            var brand = await _context.Brands.FindAsync(id);
+            if (brand == null) return NotFound();
+            return View(brand);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditBrand(Brand model)
+        {
+            if (!IsAdmin()) return RedirectToAction("Login", "Auth");
+
+            ModelState.Remove("Products");
+
+            if (await _context.Brands.AnyAsync(b => b.BrandName == model.BrandName && b.BrandId != model.BrandId))
+            {
+                ModelState.AddModelError("BrandName", "Brand name already exists!");
+            }
+
+            if (ModelState.IsValid)
+            {
+                var existingBrand = await _context.Brands.FindAsync(model.BrandId);
+                if (existingBrand != null)
+                {
+                    existingBrand.BrandName = model.BrandName;
+                    existingBrand.Description = model.Description;
+                    existingBrand.IsActive = model.IsActive;
+
+                    await _context.SaveChangesAsync();
+                    TempData["Success"] = "Brand updated successfully!";
+                    return RedirectToAction(nameof(Brands));
+                }
+            }
+            return View(model);
+        }
+
+        public async Task<IActionResult> DeleteBrand(int id)
+        {
+            if (!IsAdmin()) return RedirectToAction("Login", "Auth");
+
+            var brand = await _context.Brands.FindAsync(id);
+            if (brand != null)
+            {
+                bool hasProducts = await _context.Products.AnyAsync(p => p.BrandId == id);
+
+                if (hasProducts)
+                {
+                    brand.IsActive = false;
+                    TempData["Success"] = "Brand contains products. It has been deactivated instead of deleted.";
+                }
+                else
+                {
+                    _context.Brands.Remove(brand);
+                    TempData["Success"] = "Brand deleted successfully!";
+                }
+                await _context.SaveChangesAsync();
+            }
             return RedirectToAction(nameof(Brands));
         }
-    }
-    return View(model);
-}
-
-// [POST/GET] Xóa Brand
-public async Task<IActionResult> DeleteBrand(int id)
-{
-    if (!IsAdmin()) return RedirectToAction("Login", "Auth");
-
-    var brand = await _context.Brands.FindAsync(id);
-    if (brand != null)
-    {
-        // Kiểm tra ràng buộc: Nếu có sản phẩm thì chỉ ẩn (Soft Delete), không xóa cứng
-        bool hasProducts = await _context.Products.AnyAsync(p => p.BrandId == id);
-        
-        if (hasProducts)
-        {
-            brand.IsActive = false; // Chuyển sang Inactive
-            TempData["Success"] = "Brand contains products. It has been deactivated instead of deleted.";
-        }
-        else
-        {
-            _context.Brands.Remove(brand);
-            TempData["Success"] = "Brand deleted successfully!";
-        }
-        await _context.SaveChangesAsync();
-    }
-    return RedirectToAction(nameof(Brands));
-}
     }
 }
