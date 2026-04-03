@@ -178,43 +178,73 @@ namespace MotorcyclePartShop.Controllers
         {
             if (!IsAdmin()) return RedirectToAction("Login", "Auth");
 
+            // 1. Xóa TẤT CẢ các validation ngầm của Entity Framework liên quan đến Object
             ModelState.Remove("MainImage");
             ModelState.Remove("Category");
             ModelState.Remove("Brand");
+            ModelState.Remove("Images");
+            ModelState.Remove("PromotionProducts");
+            ModelState.Remove("Specifications");
+            ModelState.Remove("OrderItems");
+
+            // 2. Bắt lỗi BrandId = 0 (Khi người dùng không chọn thương hiệu)
+            if (model.BrandId == 0)
+            {
+                model.BrandId = null; // Chuyển về null để Postgres chấp nhận
+            }
+
+            // 3. Xử lý Description nếu để trống (tránh lỗi Not Null của DB)
+            if (string.IsNullOrWhiteSpace(model.Description))
+            {
+                model.Description = "";
+                ModelState.Remove("Description");
+            }
 
             if (ModelState.IsValid)
             {
-                if (imageFile != null)
+                try
                 {
-                    string folder = Path.Combine(_webHostEnvironment.WebRootPath, "images/products");
-                    if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
-
-                    string fileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
-                    string filePath = Path.Combine(folder, fileName);
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    if (imageFile != null)
                     {
-                        await imageFile.CopyToAsync(stream);
-                    }
-                    model.MainImage = fileName;
-                }
-                else
-                {
-                    model.MainImage = "default.png";
-                }
+                        string folder = Path.Combine(_webHostEnvironment.WebRootPath, "images/products");
+                        if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
 
-                model.CreatedAt = DateTime.Now;
-                _context.Products.Add(model);
-                await _context.SaveChangesAsync();
-                TempData["Success"] = "Thêm sản phẩm thành công!";
-                return RedirectToAction("Products");
+                        string fileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
+                        string filePath = Path.Combine(folder, fileName);
+
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await imageFile.CopyToAsync(stream);
+                        }
+                        model.MainImage = fileName;
+                    }
+                    else
+                    {
+                        model.MainImage = "default.png";
+                    }
+
+                    // [QUAN TRỌNG] Đổi sang UtcNow để chiều lòng PostgreSQL
+                    model.CreatedAt = DateTime.UtcNow;
+
+                    _context.Products.Add(model);
+                    await _context.SaveChangesAsync(); // Nếu DB từ chối, lỗi sẽ bị bắt ở catch
+
+                    TempData["Success"] = "Product added successfully!";
+                    return RedirectToAction("Products");
+                }
+                catch (Exception ex)
+                {
+                    // Lôi lỗi thật sự từ Database ra để hiển thị thay vì sập web
+                    string detailError = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                    ModelState.AddModelError("", "Database Error: " + detailError);
+                }
             }
 
+            // Nếu code chạy đến đây nghĩa là có lỗi, ta load lại danh sách để form không bị lỗi dropdown
             ViewBag.Categories = _context.Categories.ToList();
             ViewBag.Brands = _context.Brands.ToList();
             return View(model);
         }
-
         public async Task<IActionResult> EditProduct(int id)
         {
             if (!IsAdmin()) return RedirectToAction("Login", "Auth");
