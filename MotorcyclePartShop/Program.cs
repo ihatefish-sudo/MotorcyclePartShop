@@ -10,6 +10,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddSession();
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 builder.Services.AddHostedService<MotorcyclePartShop.Services.AutoCancelUnpaidOrdersService>();
+builder.Services.AddScoped<IPhotoService, CloudinaryPhotoService>();
 // ??ng ký DbContext ?úng tên (MotorcyclePartShopDbContext)
 builder.Services.AddDbContext<MotorcyclePartShopDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
