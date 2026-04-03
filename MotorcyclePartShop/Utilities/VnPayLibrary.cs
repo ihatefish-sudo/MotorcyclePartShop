@@ -36,19 +36,21 @@ namespace MotorcyclePartShop.Utilities
             StringBuilder data = new StringBuilder();
             foreach (KeyValuePair<string, string> kv in _requestData)
             {
-                if (data.Length > 0)
+                if (!string.IsNullOrEmpty(kv.Value))
                 {
-                    data.Append('&');
+                    if (data.Length > 0)
+                    {
+                        data.Append('&');
+                    }
+                    // Sử dụng Uri.EscapeDataString chuẩn tuyệt đối của Microsoft
+                    data.Append(kv.Key + "=" + Uri.EscapeDataString(kv.Value));
                 }
-                // Mã hóa cả Key và Value
-                data.Append(WebUtility.UrlEncode(kv.Key) + "=" + WebUtility.UrlEncode(kv.Value));
             }
 
-            // [FIXED] Chuyển dấu '+' thành '%20' để đúng chuẩn RFC 3986 của VNPAY
-            string queryString = data.ToString().Replace("+", "%20");
-
+            string queryString = data.ToString();
             string vnp_SecureHash = Utils.HmacSHA512(vnp_HashSecret, queryString);
             string paymentUrl = baseUrl + "?" + queryString + "&vnp_SecureHash=" + vnp_SecureHash;
+
             return paymentUrl;
         }
 
@@ -59,23 +61,22 @@ namespace MotorcyclePartShop.Utilities
             {
                 if (kv.Key != "vnp_SecureHash" && kv.Key != "vnp_SecureHashType")
                 {
-                    if (data.Length > 0)
+                    if (!string.IsNullOrEmpty(kv.Value))
                     {
-                        data.Append('&');
+                        if (data.Length > 0)
+                        {
+                            data.Append('&');
+                        }
+                        data.Append(kv.Key + "=" + Uri.EscapeDataString(kv.Value));
                     }
-                    data.Append(WebUtility.UrlEncode(kv.Key) + "=" + WebUtility.UrlEncode(kv.Value));
                 }
             }
 
-            // [FIXED] Đồng bộ hóa thay thế dấu '+' thành '%20' khi Validate để khớp 100%
-            string queryString = data.ToString().Replace("+", "%20");
-
-            string checkSum = Utils.HmacSHA512(vnp_HashSecret, queryString);
+            string checkSum = Utils.HmacSHA512(vnp_HashSecret, data.ToString());
             return checkSum.Equals(inputHash, StringComparison.InvariantCultureIgnoreCase);
         }
-    }
 
-    public class VnPayCompare : IComparer<string>
+        public class VnPayCompare : IComparer<string>
     {
         public int Compare(string x, string y)
         {
