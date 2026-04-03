@@ -40,9 +40,13 @@ namespace MotorcyclePartShop.Utilities
                 {
                     data.Append('&');
                 }
-                data.Append(kv.Key + "=" + WebUtility.UrlEncode(kv.Value));
+                // Mã hóa cả Key và Value
+                data.Append(WebUtility.UrlEncode(kv.Key) + "=" + WebUtility.UrlEncode(kv.Value));
             }
-            string queryString = data.ToString();
+
+            // [FIXED] Chuyển dấu '+' thành '%20' để đúng chuẩn RFC 3986 của VNPAY
+            string queryString = data.ToString().Replace("+", "%20");
+
             string vnp_SecureHash = Utils.HmacSHA512(vnp_HashSecret, queryString);
             string paymentUrl = baseUrl + "?" + queryString + "&vnp_SecureHash=" + vnp_SecureHash;
             return paymentUrl;
@@ -59,10 +63,14 @@ namespace MotorcyclePartShop.Utilities
                     {
                         data.Append('&');
                     }
-                    data.Append(kv.Key + "=" + WebUtility.UrlEncode(kv.Value));
+                    data.Append(WebUtility.UrlEncode(kv.Key) + "=" + WebUtility.UrlEncode(kv.Value));
                 }
             }
-            string checkSum = Utils.HmacSHA512(vnp_HashSecret, data.ToString());
+
+            // [FIXED] Đồng bộ hóa thay thế dấu '+' thành '%20' khi Validate để khớp 100%
+            string queryString = data.ToString().Replace("+", "%20");
+
+            string checkSum = Utils.HmacSHA512(vnp_HashSecret, queryString);
             return checkSum.Equals(inputHash, StringComparison.InvariantCultureIgnoreCase);
         }
     }
