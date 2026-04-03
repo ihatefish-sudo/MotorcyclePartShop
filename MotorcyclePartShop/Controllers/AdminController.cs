@@ -4,7 +4,12 @@ using MotorcyclePartShop.Data;
 using MotorcyclePartShop.Models;
 using Microsoft.AspNetCore.Http;
 using MotorcyclePartShop.Utilities;
+using MotorcyclePartShop.Services; // Kéo thư viện Services để dùng IPhotoService
 using System.IO;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace MotorcyclePartShop.Controllers
 {
@@ -12,11 +17,13 @@ namespace MotorcyclePartShop.Controllers
     {
         private readonly MotorcyclePartShopDbContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly IPhotoService _photoService; // Thêm PhotoService cho Cloudinary
 
-        public AdminController(MotorcyclePartShopDbContext context, IWebHostEnvironment webHostEnvironment)
+        public AdminController(MotorcyclePartShopDbContext context, IWebHostEnvironment webHostEnvironment, IPhotoService photoService)
         {
             _context = context;
             _webHostEnvironment = webHostEnvironment;
+            _photoService = photoService;
         }
 
         // Helper: Check Admin permission
@@ -41,8 +48,8 @@ namespace MotorcyclePartShop.Controllers
                 .Where(o => o.PaymentStatus == "Paid" || o.DeliveryStatus == "Completed")
                 .SumAsync(o => o.TotalAmount);
 
-            // 2. Thống kê Doanh thu chi tiết
-            var today = DateTime.Now.Date;
+            // 2. Thống kê Doanh thu chi tiết (Dùng UtcNow)
+            var today = DateTime.UtcNow.Date;
             var startOfMonth = new DateTime(today.Year, today.Month, 1);
             var diff = (7 + (today.DayOfWeek - DayOfWeek.Monday)) % 7;
             var startOfWeek = today.AddDays(-1 * diff).Date;
@@ -60,7 +67,7 @@ namespace MotorcyclePartShop.Controllers
                 .SumAsync(o => o.TotalAmount);
 
             // 3. Biểu đồ Doanh thu 12 tháng
-            var currentYear = DateTime.Now.Year;
+            var currentYear = DateTime.UtcNow.Year;
             var revenueData = await _context.Orders
                 .Where(o => o.OrderDate.Year == currentYear && (o.PaymentStatus == "Paid" || o.DeliveryStatus == "Completed"))
                 .GroupBy(o => o.OrderDate.Month)
@@ -178,7 +185,6 @@ namespace MotorcyclePartShop.Controllers
         {
             if (!IsAdmin()) return RedirectToAction("Login", "Auth");
 
-            // 1. Xóa TẤT CẢ các validation ngầm của Entity Framework liên quan đến Object
             ModelState.Remove("MainImage");
             ModelState.Remove("Category");
             ModelState.Remove("Brand");
@@ -187,13 +193,11 @@ namespace MotorcyclePartShop.Controllers
             ModelState.Remove("Specifications");
             ModelState.Remove("OrderItems");
 
-            // 2. Bắt lỗi BrandId = 0 (Khi người dùng không chọn thương hiệu)
             if (model.BrandId == 0)
             {
-                model.BrandId = null; // Chuyển về null để Postgres chấp nhận
+                model.BrandId = null;
             }
 
-            // 3. Xử lý Description nếu để trống (tránh lỗi Not Null của DB)
             if (string.IsNullOrWhiteSpace(model.Description))
             {
                 model.Description = "";
@@ -204,47 +208,36 @@ namespace MotorcyclePartShop.Controllers
             {
                 try
                 {
-                    if (imageFile != null)
+                    // --- SỬ DỤNG CLOUDINARY THAY VÌ LƯU LOCAL ---
+                    if (imageFile != null && imageFile.Length > 0)
                     {
-                        string folder = Path.Combine(_webHostEnvironment.WebRootPath, "images/products");
-                        if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
-
-                        string fileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
-                        string filePath = Path.Combine(folder, fileName);
-
-                        using (var stream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await imageFile.CopyToAsync(stream);
-                        }
-                        model.MainImage = fileName;
+                        string imageUrl = await _photoService.UploadImageAsync(imageFile, "Products");
+                        model.MainImage = imageUrl ?? "default.png";
                     }
                     else
                     {
                         model.MainImage = "default.png";
                     }
 
-                    // [QUAN TRỌNG] Đổi sang UtcNow để chiều lòng PostgreSQL
-                    model.CreatedAt = DateTime.UtcNow;
-
+                    model.CreatedAt = DateTime.UtcNow; // Chuẩn Postgres
                     _context.Products.Add(model);
-                    await _context.SaveChangesAsync(); // Nếu DB từ chối, lỗi sẽ bị bắt ở catch
+                    await _context.SaveChangesAsync();
 
                     TempData["Success"] = "Product added successfully!";
                     return RedirectToAction("Products");
                 }
                 catch (Exception ex)
                 {
-                    // Lôi lỗi thật sự từ Database ra để hiển thị thay vì sập web
                     string detailError = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
-                    ModelState.AddModelError("", "Database Error: " + detailError);
+                    ModelState.AddModelError("", "System Error: " + detailError);
                 }
             }
 
-            // Nếu code chạy đến đây nghĩa là có lỗi, ta load lại danh sách để form không bị lỗi dropdown
             ViewBag.Categories = _context.Categories.ToList();
             ViewBag.Brands = _context.Brands.ToList();
             return View(model);
         }
+
         public async Task<IActionResult> EditProduct(int id)
         {
             if (!IsAdmin()) return RedirectToAction("Login", "Auth");
@@ -279,6 +272,17 @@ namespace MotorcyclePartShop.Controllers
                     ModelState.Remove(key);
             }
 
+            if (model.BrandId == 0)
+            {
+                model.BrandId = null;
+            }
+
+            if (string.IsNullOrWhiteSpace(model.Description))
+            {
+                model.Description = "";
+                ModelState.Remove("Description");
+            }
+
             if (ModelState.IsValid)
             {
                 try
@@ -298,25 +302,14 @@ namespace MotorcyclePartShop.Controllers
                     existingProduct.IsActive = model.IsActive;
                     existingProduct.IsFeatured = model.IsFeatured;
 
+                    // --- SỬ DỤNG CLOUDINARY (Không cần xóa ảnh cũ ở local nữa) ---
                     if (imageFile != null && imageFile.Length > 0)
                     {
-                        string folder = Path.Combine(_webHostEnvironment.WebRootPath, "images/products");
-                        if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
-
-                        if (!string.IsNullOrEmpty(existingProduct.MainImage))
+                        string imageUrl = await _photoService.UploadImageAsync(imageFile, "Products");
+                        if (!string.IsNullOrEmpty(imageUrl))
                         {
-                            string oldPath = Path.Combine(folder, existingProduct.MainImage);
-                            if (System.IO.File.Exists(oldPath)) System.IO.File.Delete(oldPath);
+                            existingProduct.MainImage = imageUrl;
                         }
-
-                        string fileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
-                        string filePath = Path.Combine(folder, fileName);
-
-                        using (var stream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await imageFile.CopyToAsync(stream);
-                        }
-                        existingProduct.MainImage = fileName;
                     }
 
                     _context.ProductSpecifications.RemoveRange(existingProduct.Specifications);
@@ -343,7 +336,8 @@ namespace MotorcyclePartShop.Controllers
                 }
                 catch (Exception ex)
                 {
-                    ModelState.AddModelError("", "System error: " + ex.Message);
+                    string detailError = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                    ModelState.AddModelError("", "System error: " + detailError);
                 }
             }
 
@@ -359,7 +353,7 @@ namespace MotorcyclePartShop.Controllers
             var product = await _context.Products.FindAsync(id);
             if (product != null)
             {
-                product.IsActive = false;
+                product.IsActive = false; // Soft delete
                 await _context.SaveChangesAsync();
             }
             return RedirectToAction("Products");
@@ -385,7 +379,7 @@ namespace MotorcyclePartShop.Controllers
 
             if (!string.IsNullOrEmpty(dateRange))
             {
-                var today = DateTime.Now.Date;
+                var today = DateTime.UtcNow.Date;
                 switch (dateRange)
                 {
                     case "today": query = query.Where(o => o.OrderDate.Date == today); break;
@@ -476,7 +470,7 @@ namespace MotorcyclePartShop.Controllers
                 {
                     OrderId = orderId,
                     Status = $"Admin updated payment status: {paymentStatus}",
-                    UpdatedAt = DateTime.Now
+                    UpdatedAt = DateTime.UtcNow // Chuẩn Postgres
                 });
                 await _context.SaveChangesAsync();
             }
@@ -495,7 +489,7 @@ namespace MotorcyclePartShop.Controllers
             if (!string.IsNullOrEmpty(search)) query = query.Where(p => p.PromoCode.Contains(search));
             if (!string.IsNullOrEmpty(status))
             {
-                var now = DateTime.Now;
+                var now = DateTime.UtcNow; // Chuẩn Postgres
                 if (status == "active") query = query.Where(p => p.IsActive && p.EndDate >= now);
                 else if (status == "expired") query = query.Where(p => !p.IsActive || p.EndDate < now);
             }
@@ -692,7 +686,7 @@ namespace MotorcyclePartShop.Controllers
             if (ModelState.IsValid)
             {
                 model.PasswordHash = SecurityHelper.HashPassword(Password);
-                model.CreatedAt = DateTime.Now;
+                model.CreatedAt = DateTime.UtcNow; // Chuẩn Postgres
                 model.IsActive = true;
 
                 _context.Users.Add(model);
@@ -894,7 +888,7 @@ namespace MotorcyclePartShop.Controllers
 
                     if (Status == "Approved" || Status == "Rejected")
                     {
-                        request.ResolvedAt = DateTime.Now;
+                        request.ResolvedAt = DateTime.UtcNow; // Chuẩn Postgres
                     }
 
                     if (Status == "Approved")
@@ -975,14 +969,12 @@ namespace MotorcyclePartShop.Controllers
         {
             if (!IsAdmin()) return RedirectToAction("Login", "Auth");
 
-            // Xóa validation cho danh sách Products
             ModelState.Remove("Products");
 
-            // [QUAN TRỌNG] Xử lý Description tùy chọn
             if (string.IsNullOrWhiteSpace(model.Description))
             {
-                model.Description = ""; // Gán chuỗi rỗng để không bị lỗi database
-                ModelState.Remove("Description"); // Xóa lỗi validation ngầm của ASP.NET
+                model.Description = "";
+                ModelState.Remove("Description");
             }
 
             if (await _context.Brands.AnyAsync(b => b.BrandName == model.BrandName))
@@ -992,8 +984,7 @@ namespace MotorcyclePartShop.Controllers
 
             if (ModelState.IsValid)
             {
-                // Chuyển thành UtcNow để chuẩn xác với PostgreSQL
-                model.CreatedAt = DateTime.Now;
+                model.CreatedAt = DateTime.UtcNow; // Chuẩn Postgres
                 _context.Brands.Add(model);
                 await _context.SaveChangesAsync();
                 TempData["Success"] = "Brand created successfully!";
@@ -1017,7 +1008,6 @@ namespace MotorcyclePartShop.Controllers
 
             ModelState.Remove("Products");
 
-            // [QUAN TRỌNG] Xử lý Description tùy chọn
             if (string.IsNullOrWhiteSpace(model.Description))
             {
                 model.Description = "";
