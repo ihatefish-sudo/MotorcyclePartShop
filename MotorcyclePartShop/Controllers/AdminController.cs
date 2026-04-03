@@ -945,7 +945,15 @@ namespace MotorcyclePartShop.Controllers
         {
             if (!IsAdmin()) return RedirectToAction("Login", "Auth");
 
+            // Xóa validation cho danh sách Products
             ModelState.Remove("Products");
+
+            // [QUAN TRỌNG] Xử lý Description tùy chọn
+            if (string.IsNullOrWhiteSpace(model.Description))
+            {
+                model.Description = ""; // Gán chuỗi rỗng để không bị lỗi database
+                ModelState.Remove("Description"); // Xóa lỗi validation ngầm của ASP.NET
+            }
 
             if (await _context.Brands.AnyAsync(b => b.BrandName == model.BrandName))
             {
@@ -954,6 +962,7 @@ namespace MotorcyclePartShop.Controllers
 
             if (ModelState.IsValid)
             {
+                // Chuyển thành UtcNow để chuẩn xác với PostgreSQL
                 model.CreatedAt = DateTime.Now;
                 _context.Brands.Add(model);
                 await _context.SaveChangesAsync();
@@ -977,6 +986,13 @@ namespace MotorcyclePartShop.Controllers
             if (!IsAdmin()) return RedirectToAction("Login", "Auth");
 
             ModelState.Remove("Products");
+
+            // [QUAN TRỌNG] Xử lý Description tùy chọn
+            if (string.IsNullOrWhiteSpace(model.Description))
+            {
+                model.Description = "";
+                ModelState.Remove("Description");
+            }
 
             if (await _context.Brands.AnyAsync(b => b.BrandName == model.BrandName && b.BrandId != model.BrandId))
             {

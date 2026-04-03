@@ -5,7 +5,8 @@ using MotorcyclePartShop.Models;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http; // Để lấy Session UserId
+using Microsoft.AspNetCore.Http;
+using System.Collections.Generic;
 
 namespace MotorcyclePartShop.Controllers
 {
@@ -20,7 +21,8 @@ namespace MotorcyclePartShop.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var today = DateTime.Now;
+            // [FIXED] Đổi DateTime.Now thành DateTime.UtcNow để khớp với PostgreSQL
+            var today = DateTime.UtcNow;
 
             // Lấy ID người dùng đang đăng nhập (nếu có)
             int? userId = null;

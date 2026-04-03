@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using MotorcyclePartShop.Data;
 using MotorcyclePartShop.Models;
 using System.Diagnostics;
-// using System.Security.Claims; // Not needed since we are using Session
 
 namespace MotorcyclePartShop.Controllers
 {
@@ -20,7 +19,7 @@ namespace MotorcyclePartShop.Controllers
         {
             var viewModel = new HomeViewModel();
 
-            // --- 1. Get Product Data (Keep your existing logic) ---
+            // --- 1. Get Product Data ---
             viewModel.Categories = await _context.Categories.Where(c => c.IsActive).ToListAsync();
 
             viewModel.FeaturedProducts = await _context.Products
@@ -31,7 +30,8 @@ namespace MotorcyclePartShop.Controllers
                 .Where(p => p.IsActive == true)
                 .OrderByDescending(p => p.CreatedAt).Take(8).ToListAsync();
 
-            var today = DateTime.Now;
+            // [FIXED] Dùng UtcNow thay cho Now để so sánh khớp với PostgreSQL
+            var today = DateTime.UtcNow;
             viewModel.DiscountedProducts = await _context.Products
                 .Include(p => p.PromotionProducts).ThenInclude(pp => pp.Promotion)
                 .Where(p => p.IsActive == true &&
@@ -39,35 +39,28 @@ namespace MotorcyclePartShop.Controllers
                 .Take(8).ToListAsync();
 
 
-            // --- [NEW LOGIC] HANDLE TOASTR NOTIFICATIONS BASED ON SESSION ---
-
-            // Retrieve User info from Session (set in AuthController)
+            // --- 2. HANDLE TOASTR NOTIFICATIONS BASED ON SESSION ---
             var userIdStr = HttpContext.Session.GetString("UserId");
             var role = HttpContext.Session.GetString("Role");
             var userName = HttpContext.Session.GetString("UserName");
 
-            // Only execute if the user is logged in
             if (!string.IsNullOrEmpty(userIdStr))
             {
-                // A. WELCOME TOASTR (Only for Customers)
+                // A. WELCOME TOASTR
                 if (role == "Customer")
                 {
-                    // Check if the notification has already been shown in this session
-                    // "WelcomeShown" is a temporary key we define
                     var welcomeShown = HttpContext.Session.GetString("WelcomeShown");
 
                     if (string.IsNullOrEmpty(welcomeShown))
                     {
-                        // Set flag for the View to display the toastr
                         ViewBag.ShowWelcomeUser = true;
                         ViewBag.UserName = userName;
 
-                        // Mark in Session that it has been shown -> F5 will not show it again
                         HttpContext.Session.SetString("WelcomeShown", "true");
                     }
                 }
 
-                // B. TIMEOUT ORDER TOASTR (Old logic converted to use Session)
+                // B. TIMEOUT ORDER TOASTR
                 if (int.TryParse(userIdStr, out int userId))
                 {
                     var timeoutOrder = await _context.Orders
@@ -82,14 +75,16 @@ namespace MotorcyclePartShop.Controllers
                     }
                 }
             }
-            // ---------------------------------------------------------
 
             return View(viewModel);
         }
 
-        // ... Other Actions (Privacy, About...) keep as is
-        public IActionResult Privacy() { return View(); }
+        public IActionResult Careers() { return View(); }
         public IActionResult About() { return View(); }
+        public IActionResult Contact() { return View(); }
+        public IActionResult ReturnPolicy() { return View(); }
+        public IActionResult WarrantyPolicy() { return View(); }
+        public IActionResult ShoppingGuide() { return View(); }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()

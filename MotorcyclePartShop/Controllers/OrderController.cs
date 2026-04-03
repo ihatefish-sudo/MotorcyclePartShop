@@ -6,12 +6,12 @@ using MotorcyclePartShop.Extensions;
 using MotorcyclePartShop.Services;
 using System.IO;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+// Đã xóa: using Microsoft.Data.SqlClient;
 
 namespace MotorcyclePartShop.Controllers
 {
@@ -92,7 +92,8 @@ namespace MotorcyclePartShop.Controllers
                 // --- Coupon Processing Logic ---
                 if (!string.IsNullOrEmpty(model.CouponCode))
                 {
-                    var today = DateTime.Now;
+                    // [FIXED] Dùng UtcNow
+                    var today = DateTime.UtcNow;
                     var promo = await _context.Promotions
                         .Include(p => p.PromotionProducts)
                         .FirstOrDefaultAsync(p => p.PromoCode == model.CouponCode && p.IsActive && p.StartDate <= today && p.EndDate >= today);
@@ -125,13 +126,15 @@ namespace MotorcyclePartShop.Controllers
                 var order = new Order
                 {
                     UserId = userId,
-                    OrderDate = DateTime.Now,
+                    // [FIXED] Dùng UtcNow
+                    OrderDate = DateTime.UtcNow,
                     TotalAmount = finalTotal,
                     PaymentStatus = "Pending",
                     DeliveryStatus = "Pending",
                     ShippingAddress = $"{model.Address}, {model.Province} (Receiver: {model.FullName}, Phone: {model.Phone}, Note: {model.Note}) {(string.IsNullOrEmpty(model.CouponCode) ? "" : $"[Coupon: {model.CouponCode} - Disc: {discountAmount:N0}đ]")}",
                     PaymentMethod = model.PaymentMethod,
-                    TrackingCode = "ORD" + DateTime.Now.Ticks.ToString().Substring(10),
+                    // [FIXED] Dùng UtcNow
+                    TrackingCode = "ORD" + DateTime.UtcNow.Ticks.ToString().Substring(10),
                     ShippingFee = shippingFee,
                     PromotionId = appliedPromotionId
                 };
@@ -161,7 +164,8 @@ namespace MotorcyclePartShop.Controllers
                 {
                     OrderId = order.OrderId,
                     Status = "Order placed successfully.",
-                    UpdatedAt = DateTime.Now
+                    // [FIXED] Dùng UtcNow
+                    UpdatedAt = DateTime.UtcNow
                 });
 
                 await _context.SaveChangesAsync();
@@ -209,7 +213,8 @@ namespace MotorcyclePartShop.Controllers
             }
             int userId = int.Parse(userIdString);
 
-            var today = DateTime.Now;
+            // [FIXED] Dùng UtcNow
+            var today = DateTime.UtcNow;
             var promo = await _context.Promotions
                 .Include(p => p.PromotionProducts)
                 .FirstOrDefaultAsync(p => p.PromoCode == code && p.IsActive);
@@ -219,7 +224,8 @@ namespace MotorcyclePartShop.Controllers
                 return Json(new { success = false, message = "Invalid coupon code." });
             }
 
-            if (DateTime.Now < promo.StartDate || DateTime.Now > promo.EndDate)
+            // [FIXED] Dùng UtcNow
+            if (DateTime.UtcNow < promo.StartDate || DateTime.UtcNow > promo.EndDate)
             {
                 return Json(new { success = false, message = "Coupon is expired or not started yet." });
             }
@@ -280,7 +286,8 @@ namespace MotorcyclePartShop.Controllers
                 {
                     OrderId = id,
                     Status = "Customer confirmed receipt of goods.",
-                    UpdatedAt = DateTime.Now
+                    // [FIXED] Dùng UtcNow
+                    UpdatedAt = DateTime.UtcNow
                 });
 
                 await _context.SaveChangesAsync();
@@ -404,15 +411,19 @@ namespace MotorcyclePartShop.Controllers
                     throw new Exception("Please upload photographic proof.");
                 }
 
-                var pOrderId = new SqlParameter("@OrderId", OrderId);
-                var pReason = new SqlParameter("@Reason", Reason);
-                var pNote = new SqlParameter("@Note", Note ?? "");
-                var pImage = new SqlParameter("@ImageEvidence", uniqueFileName ?? (object)DBNull.Value);
+                // [FIXED] THAY THẾ TOÀN BỘ LOGIC STORED PROCEDURE BẰNG ENTITY FRAMEWORK
+                var returnRequest = new ReturnRequest
+                {
+                    OrderId = OrderId,
+                    Reason = Reason,
+                    Note = Note ?? "",
+                    ImageEvidence = uniqueFileName,
+                    Status = "Pending",
+                    RequestedAt = DateTime.UtcNow // Đã chuyển sang UtcNow
+                };
 
-                await _context.Database.ExecuteSqlRawAsync(
-                    "EXEC sp_CreateReturnRequest @OrderId, @Reason, @Note, @ImageEvidence",
-                    pOrderId, pReason, pNote, pImage
-                );
+                _context.ReturnRequests.Add(returnRequest);
+                await _context.SaveChangesAsync();
 
                 TempData["Success"] = "Request submitted successfully!";
                 return RedirectToAction("History");
@@ -481,7 +492,8 @@ namespace MotorcyclePartShop.Controllers
                 {
                     OrderId = order.OrderId,
                     Status = $"Order cancelled by customer. Payment: {order.PaymentStatus}",
-                    UpdatedAt = DateTime.Now
+                    // [FIXED] Dùng UtcNow
+                    UpdatedAt = DateTime.UtcNow
                 });
 
                 await _context.SaveChangesAsync();
