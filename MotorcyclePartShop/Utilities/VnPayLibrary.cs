@@ -2,6 +2,8 @@
 using System.Text;
 using System.Security.Cryptography;
 using System.Globalization;
+using System;
+using System.Collections.Generic;
 
 namespace MotorcyclePartShop.Utilities
 {
@@ -38,8 +40,7 @@ namespace MotorcyclePartShop.Utilities
             {
                 if (!string.IsNullOrEmpty(kv.Value))
                 {
-                    // ĐỔI SANG DÙNG Uri.EscapeDataString ĐỂ KHÔNG BỊ LỖI DẤU "+"
-                    data.Append(WebUtility.UrlEncode(kv.Key) + "=" + Uri.EscapeDataString(kv.Value) + "&");
+                    data.Append(WebUtility.UrlEncode(kv.Key) + "=" + WebUtility.UrlEncode(kv.Value) + "&");
                 }
             }
             string queryString = data.ToString();
@@ -47,8 +48,13 @@ namespace MotorcyclePartShop.Utilities
             {
                 queryString = queryString.Remove(data.Length - 1, 1);
             }
-            string vnp_SecureHash = Utils.HmacSHA512(vnp_HashSecret, queryString);
-            return baseUrl + "?" + queryString + "&vnp_SecureHash=" + vnp_SecureHash;
+
+            // Xử lý triệt để khoảng trắng theo chuẩn VNPAY
+            string signData = queryString.Replace("+", "%20");
+            string vnp_SecureHash = Utils.HmacSHA512(vnp_HashSecret, signData);
+
+            baseUrl += "?" + signData + "&vnp_SecureHash=" + vnp_SecureHash;
+            return baseUrl;
         }
 
         public bool ValidateSignature(string inputHash, string vnp_HashSecret)
@@ -69,7 +75,9 @@ namespace MotorcyclePartShop.Utilities
             {
                 queryString = queryString.Remove(data.Length - 1, 1);
             }
-            string checkSum = Utils.HmacSHA512(vnp_HashSecret, queryString);
+
+            string signData = queryString.Replace("+", "%20");
+            string checkSum = Utils.HmacSHA512(vnp_HashSecret, signData);
             return checkSum.Equals(inputHash, StringComparison.InvariantCultureIgnoreCase);
         }
     }

@@ -10,12 +10,10 @@ namespace MotorcyclePartShop.Controllers
     public class PaymentController : Controller
     {
         private readonly MotorcyclePartShopDbContext _context;
-        private readonly IConfiguration _configuration;
 
-        public PaymentController(MotorcyclePartShopDbContext context, IConfiguration configuration)
+        public PaymentController(MotorcyclePartShopDbContext context)
         {
             _context = context;
-            _configuration = configuration;
         }
 
         // ========================================================
@@ -26,12 +24,9 @@ namespace MotorcyclePartShop.Controllers
             var order = await _context.Orders.FindAsync(orderId);
             if (order == null) return NotFound();
 
-            // ==========================================
-            // [TEST MÙ NÚT]: GẮN CỨNG KEY ĐỂ VƯỢT LỖI ĐỌC FILE JSON
-            // ==========================================
+            // Gắn cứng toàn bộ cấu hình để né hoàn toàn lỗi từ server Render
             string vnp_TmnCode = "XKY2ST3F";
             string vnp_HashSecret = "GJYOOVLZX5K1ISUSMGQW6QCZXT6EN18A";
-
             string vnp_Url = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
             string vnp_ReturnUrl = "https://motorcyclepartshop.onrender.com/Payment/PaymentCallback";
 
@@ -44,7 +39,7 @@ namespace MotorcyclePartShop.Controllers
             long amount = (long)(order.TotalAmount * 100);
             vnpay.AddRequestData("vnp_Amount", amount.ToString());
 
-            // Giờ Việt Nam
+            // Giờ Việt Nam (Bắt buộc)
             string createDateVnTime = DateTime.UtcNow.AddHours(7).ToString("yyyyMMddHHmmss");
             vnpay.AddRequestData("vnp_CreateDate", createDateVnTime);
 
@@ -52,10 +47,7 @@ namespace MotorcyclePartShop.Controllers
             vnpay.AddRequestData("vnp_IpAddr", "127.0.0.1"); // Ép IP cứng
             vnpay.AddRequestData("vnp_Locale", "vn");
 
-            // ==========================================
-            // [TRỌNG TÂM]: XÓA SẠCH KHOẢNG TRẮNG Ở ĐÂY
-            // Dùng "Order_123" thay vì "Thanh toan don hang 123"
-            // ==========================================
+            // Xóa sạch khoảng trắng để chữ ký lúc đi và lúc về khớp 100%
             vnpay.AddRequestData("vnp_OrderInfo", "Order_" + order.OrderId);
             vnpay.AddRequestData("vnp_OrderType", "other");
 
@@ -72,9 +64,9 @@ namespace MotorcyclePartShop.Controllers
         // ========================================================
         public async Task<IActionResult> PaymentCallback()
         {
-            var response = _configuration.GetSection("Vnpay");
-            // Nhớ Trim() để đảm bảo chuỗi bí mật không có khoảng trắng
-            string vnp_HashSecret = response["HashSecret"]?.Trim();
+            // [QUAN TRỌNG NHẤT]: Gắn cứng HashSecret y hệt như lúc đi
+            // Tuyệt đối không đọc từ Configuration nữa để tránh lỗi Render
+            string vnp_HashSecret = "GJYOOVLZX5K1ISUSMGQW6QCZXT6EN18A";
 
             var vnpayData = Request.Query;
             VnPayLibrary vnpay = new VnPayLibrary();
@@ -112,7 +104,7 @@ namespace MotorcyclePartShop.Controllers
                         {
                             OrderId = order.OrderId,
                             Status = "Payment Successful via VNPAY",
-                            // Dùng UtcNow thay vì Now để không bị crash trên PostgreSQL
+                            // Dùng UtcNow để không bị crash trên PostgreSQL
                             UpdatedAt = DateTime.UtcNow
                         });
 
@@ -123,7 +115,6 @@ namespace MotorcyclePartShop.Controllers
                 }
                 else
                 {
-                    // Các mã lỗi khác (Khách hủy giao dịch, thẻ hết tiền...)
                     ViewBag.Message = "The transaction is not complete. Your order will be held for 10 minutes. Please re-pay in your Order History.";
                     ViewBag.IsSuccess = false;
                 }
