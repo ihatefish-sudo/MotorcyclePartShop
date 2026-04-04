@@ -171,24 +171,30 @@ namespace MotorcyclePartShop.Controllers
                 await _context.SaveChangesAsync();
 
                 // VNPAY INTEGRATION
-                if (model.PaymentMethod == "VNPAY")
-                {
-                    HttpContext.Session.Remove("Cart");
-                    return RedirectToAction("CreatePaymentUrl", "Payment", new { orderId = order.OrderId });
-                }
-
-                // --- Email Notification ---
                 try
                 {
                     string emailBody = GetEmailBody(order, cart, model);
-                    if (!string.IsNullOrEmpty(userEmail))
+                    string targetEmail = userEmail; // Copy ra biến cục bộ để dùng trong Task
+
+                    if (!string.IsNullOrEmpty(targetEmail))
                     {
-                        await _emailSender.SendEmailAsync(userEmail, $"Order Confirmation #{order.TrackingCode}", emailBody);
+                        // Dùng Task.Run để đẩy việc gửi email xuống chạy ngầm (Fire and forget)
+                        _ = Task.Run(async () =>
+                        {
+                            try
+                            {
+                                await _emailSender.SendEmailAsync(targetEmail, $"Order Confirmation #{order.TrackingCode}", emailBody);
+                            }
+                            catch (Exception emailEx)
+                            {
+                                Console.WriteLine("Lỗi gửi email ngầm: " + emailEx.Message);
+                            }
+                        });
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Email send error: " + ex.Message);
+                    Console.WriteLine("Lỗi tạo nội dung email: " + ex.Message);
                 }
 
                 HttpContext.Session.Remove("Cart");
