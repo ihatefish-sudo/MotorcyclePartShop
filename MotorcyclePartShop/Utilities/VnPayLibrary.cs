@@ -38,20 +38,16 @@ namespace MotorcyclePartShop.Utilities
             {
                 if (!string.IsNullOrEmpty(kv.Value))
                 {
-                    if (data.Length > 0)
-                    {
-                        data.Append('&');
-                    }
-                    // Sử dụng Uri.EscapeDataString chuẩn tuyệt đối của Microsoft
-                    data.Append(kv.Key + "=" + Uri.EscapeDataString(kv.Value));
+                    data.Append(WebUtility.UrlEncode(kv.Key) + "=" + WebUtility.UrlEncode(kv.Value) + "&");
                 }
             }
-
             string queryString = data.ToString();
+            if (queryString.Length > 0)
+            {
+                queryString = queryString.Remove(data.Length - 1, 1);
+            }
             string vnp_SecureHash = Utils.HmacSHA512(vnp_HashSecret, queryString);
-            string paymentUrl = baseUrl + "?" + queryString + "&vnp_SecureHash=" + vnp_SecureHash;
-
-            return paymentUrl;
+            return baseUrl + "?" + queryString + "&vnp_SecureHash=" + vnp_SecureHash;
         }
 
         public bool ValidateSignature(string inputHash, string vnp_HashSecret)
@@ -63,48 +59,48 @@ namespace MotorcyclePartShop.Utilities
                 {
                     if (!string.IsNullOrEmpty(kv.Value))
                     {
-                        if (data.Length > 0)
-                        {
-                            data.Append('&');
-                        }
-                        data.Append(kv.Key + "=" + Uri.EscapeDataString(kv.Value));
+                        data.Append(WebUtility.UrlEncode(kv.Key) + "=" + WebUtility.UrlEncode(kv.Value) + "&");
                     }
                 }
             }
-
-            string checkSum = Utils.HmacSHA512(vnp_HashSecret, data.ToString());
+            string queryString = data.ToString();
+            if (queryString.Length > 0)
+            {
+                queryString = queryString.Remove(data.Length - 1, 1);
+            }
+            string checkSum = Utils.HmacSHA512(vnp_HashSecret, queryString);
             return checkSum.Equals(inputHash, StringComparison.InvariantCultureIgnoreCase);
         }
+    }
 
-        public class VnPayCompare : IComparer<string>
+    public class VnPayCompare : IComparer<string>
+    {
+        public int Compare(string x, string y)
         {
-            public int Compare(string x, string y)
-            {
-                if (x == y) return 0;
-                if (x == null) return -1;
-                if (y == null) return 1;
-                var vnpCompare = CompareInfo.GetCompareInfo("en-US");
-                return vnpCompare.Compare(x, y, CompareOptions.Ordinal);
-            }
+            if (x == y) return 0;
+            if (x == null) return -1;
+            if (y == null) return 1;
+            var vnpCompare = CompareInfo.GetCompareInfo("en-US");
+            return vnpCompare.Compare(x, y, CompareOptions.Ordinal);
         }
+    }
 
-        public static class Utils
+    public static class Utils
+    {
+        public static string HmacSHA512(string key, string inputData)
         {
-            public static string HmacSHA512(string key, string inputData)
+            var hash = new StringBuilder();
+            byte[] keyBytes = Encoding.UTF8.GetBytes(key);
+            byte[] inputBytes = Encoding.UTF8.GetBytes(inputData);
+            using (var hmac = new HMACSHA512(keyBytes))
             {
-                var hash = new StringBuilder();
-                byte[] keyBytes = Encoding.UTF8.GetBytes(key);
-                byte[] inputBytes = Encoding.UTF8.GetBytes(inputData);
-                using (var hmac = new HMACSHA512(keyBytes))
+                byte[] hashValue = hmac.ComputeHash(inputBytes);
+                foreach (var theByte in hashValue)
                 {
-                    byte[] hashValue = hmac.ComputeHash(inputBytes);
-                    foreach (var theByte in hashValue)
-                    {
-                        hash.Append(theByte.ToString("x2"));
-                    }
+                    hash.Append(theByte.ToString("x2"));
                 }
-                return hash.ToString();
             }
+            return hash.ToString();
         }
     }
 }
