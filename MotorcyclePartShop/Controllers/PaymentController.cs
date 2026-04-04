@@ -26,53 +26,42 @@ namespace MotorcyclePartShop.Controllers
             var order = await _context.Orders.FindAsync(orderId);
             if (order == null) return NotFound();
 
-            var vnPayModel = _configuration.GetSection("Vnpay");
+            // ==========================================
+            // [TEST MÙ NÚT]: GẮN CỨNG KEY ĐỂ VƯỢT LỖI ĐỌC FILE JSON
+            // ==========================================
+            string vnp_TmnCode = "XKY2ST3F";
+            string vnp_HashSecret = "GJYOOVLZX5K1ISUSMGQW6QCZXT6EN18A";
 
-            // 1. Dùng Trim() để chặn tuyệt đối khoảng trắng rác từ cấu hình/Render
-            string vnp_TmnCode = vnPayModel["TmnCode"]?.Trim();
-            string vnp_HashSecret = vnPayModel["HashSecret"]?.Trim();
-
-            // 2. Gắn cứng URL cơ bản để không phụ thuộc cấu hình sai
             string vnp_Url = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-
-            // 3. Fallback an toàn cho Return Url (phòng trường hợp biến môi trường bị lỗi)
-            string vnp_ReturnUrl = vnPayModel["PaymentBackReturnUrl"]?.Trim();
-            if (string.IsNullOrEmpty(vnp_ReturnUrl))
-            {
-                vnp_ReturnUrl = "https://motorcyclepartshop.onrender.com/Payment/PaymentCallback";
-            }
+            string vnp_ReturnUrl = "https://motorcyclepartshop.onrender.com/Payment/PaymentCallback";
 
             VnPayLibrary vnpay = new VnPayLibrary();
 
-            // 4. Các biến hệ thống chuẩn của VNPAY
             vnpay.AddRequestData("vnp_Version", "2.1.0");
             vnpay.AddRequestData("vnp_Command", "pay");
             vnpay.AddRequestData("vnp_TmnCode", vnp_TmnCode);
 
-            // Số tiền nhân 100 theo quy định VNPAY
             long amount = (long)(order.TotalAmount * 100);
             vnpay.AddRequestData("vnp_Amount", amount.ToString());
 
-            // Thời gian tạo giao dịch (Bắt buộc giờ Việt Nam GMT+7)
+            // Giờ Việt Nam
             string createDateVnTime = DateTime.UtcNow.AddHours(7).ToString("yyyyMMddHHmmss");
             vnpay.AddRequestData("vnp_CreateDate", createDateVnTime);
 
             vnpay.AddRequestData("vnp_CurrCode", "VND");
-
-            // 5. [QUAN TRỌNG]: Fix cứng IP để né IPv6 dài ngoằng của server Render
-            vnpay.AddRequestData("vnp_IpAddr", "127.0.0.1");
-
+            vnpay.AddRequestData("vnp_IpAddr", "127.0.0.1"); // Ép IP cứng
             vnpay.AddRequestData("vnp_Locale", "vn");
 
-            // 6. Thông tin đơn hàng (Bỏ ký tự # để tránh lỗi URL Encoding)
-            vnpay.AddRequestData("vnp_OrderInfo", "Thanh toan don hang " + order.OrderId);
+            // ==========================================
+            // [TRỌNG TÂM]: XÓA SẠCH KHOẢNG TRẮNG Ở ĐÂY
+            // Dùng "Order_123" thay vì "Thanh toan don hang 123"
+            // ==========================================
+            vnpay.AddRequestData("vnp_OrderInfo", "Order_" + order.OrderId);
             vnpay.AddRequestData("vnp_OrderType", "other");
 
-            // Mã tham chiếu đơn hàng
             vnpay.AddRequestData("vnp_TxnRef", order.OrderId.ToString());
             vnpay.AddRequestData("vnp_ReturnUrl", vnp_ReturnUrl);
 
-            // Tạo link thanh toán
             string paymentUrl = vnpay.CreateRequestUrl(vnp_Url, vnp_HashSecret);
 
             return Redirect(paymentUrl);

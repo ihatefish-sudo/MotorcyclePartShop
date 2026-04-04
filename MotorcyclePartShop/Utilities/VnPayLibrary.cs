@@ -38,7 +38,8 @@ namespace MotorcyclePartShop.Utilities
             {
                 if (!string.IsNullOrEmpty(kv.Value))
                 {
-                    data.Append(WebUtility.UrlEncode(kv.Key) + "=" + WebUtility.UrlEncode(kv.Value) + "&");
+                    // ĐỔI SANG DÙNG Uri.EscapeDataString ĐỂ KHÔNG BỊ LỖI DẤU "+"
+                    data.Append(WebUtility.UrlEncode(kv.Key) + "=" + Uri.EscapeDataString(kv.Value) + "&");
                 }
             }
             string queryString = data.ToString();
