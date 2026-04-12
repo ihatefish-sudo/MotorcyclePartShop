@@ -1,1 +1,1 @@
-# MotorcyclePartShop
+This repository contains both the source code and testing materials. Please navigate to the Test_Documents folder for the Test Plan & Excel Test Cases, and the MotorcyclePartShop.AutomationTests folder for the Selenium scripts.
