@@ -1,0 +1,27 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  MotorcyclePartShop.AutomationTests -> C:\Users\ACER\source\repos\MotorcyclePartShop.AutomationTests\bin\Debug\net9.0\MotorcyclePartShop.AutomationTests.dll
+Test run for C:\Users\ACER\source\repos\MotorcyclePartShop.AutomationTests\bin\Debug\net9.0\MotorcyclePartShop.AutomationTests.dll (.NETCoreApp,Version=v9.0)
+VSTest version 17.12.0 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+C:\Users\ACER\source\repos\MotorcyclePartShop.AutomationTests\bin\Debug\net9.0\MotorcyclePartShop.AutomationTests.dll
+NUnit Adapter 4.6.0.0: Test execution started
+Running all tests in C:\Users\ACER\source\repos\MotorcyclePartShop.AutomationTests\bin\Debug\net9.0\MotorcyclePartShop.AutomationTests.dll
+   NUnit3TestExecutor discovered 1 of 1 NUnit test cases using Current Discovery mode, Non-Explicit run
+Test Pass! Da tim thay don hang co ma: ORD38411904
+
+NUnit Adapter 4.6.0.0: Test execution complete
+  Passed TC41_ViewPersonalOrderHistory_WithPOM [3 s]
+  Standard Output Messages:
+ Test Pass! Da tim thay don hang co ma: ORD38411904
+
+
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 3.7295 Seconds
+
+Workload updates are available. Run `dotnet workload list` for more information.
